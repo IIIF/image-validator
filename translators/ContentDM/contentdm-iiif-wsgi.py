@@ -1,4 +1,7 @@
 
+# Author: Rob Sanderson (azaroth42@gmail.com)
+# Updated: 2013-11-01
+
 import cgitb
 from wsgiref import headers
 import urllib
@@ -10,14 +13,29 @@ try:
 except:
     import simplejson as json
 
-# Base URL of the IIIF service
-BASEURL = "http://localhost/"
-# Prefix for IIIF service
-PREFIX = "services/image/iiif"
-TILE_SIZE = 256
+# ----- CONFIGURATION OPTIONS -----
 
+# Base URL of this IIIF service
+BASEURL = "http://localhost/"
+# Prefix for this IIIF service
+PREFIX = "services/image/iiif"
+# Arbitrary tile size
+TILE_SIZE = 256
+# Arbitrary scale_factors
+# Currently: 100%, 50%, 25%, 12.5%
+SCALE_FACTORS = [1,2,4,8]
+
+# Collection to serve ... could come from URL?
 CISOROOT = "CollectionInCDM"
+# URL of Content DM ajaxhelper
 CDM_BASE = "http://cdm.example.org/utils/ajaxhelper/?"
+
+# ---------------------------------
+
+
+# Just keep cache in memory for now
+# INFO_CACHE[imageid] = (int, int, "jpg")
+INFO_CACHE = {}
 
 
 def parse_qs(data):
@@ -158,11 +176,23 @@ class ServiceHandler(WsgiApp):
 
     def make_info(self, infoId):
 
-        # XXX In ContentDM
-        # action=1 gives info about image file
-        # This should grab real height and width from it
+        try:
+            (imageW, imageH, itype) = INFO_CACHE[infoId]
+        except:
+            infoURI = CDM_BASE + ("action=1&CISOROOT=%s&CISOPTR=%s" % (CISOROOT, infoId))
+            u = urllib.urlopen(infoURI)
+            data = u.read()
+            if fh.code == 200:
+                info = json.loads(data)
+                imageW = info['imageinfo']['width']
+                imageH = info['imageinfo']['height']
+                itype = info['imageinfo']['type']
+                INFO_CACHE[infoId] = (imageW, imageH, itype)
+            else:
+                (imageW, imageH) = (800, 1321)
+                itype = 'jpg'
+            fh.close()
 
-        (imageW, imageH) = (800, 1321)
         qualities = ['native','color']
         formats = self.extensions.keys()
 
@@ -172,7 +202,7 @@ class ServiceHandler(WsgiApp):
                 "height":imageH,
                 "tile_width": TILE_SIZE,
                 "tile_height": TILE_SIZE,
-                "scale_factors": [1,2,4],
+                "scale_factors": SCALE_FACTORS,
                 "formats": formats,
                 "qualities": qualities,
                 "profile": self.compliance}
@@ -181,11 +211,9 @@ class ServiceHandler(WsgiApp):
         
     def handle(self):
         # http://{server}{/prefix}   /{identifier}/{region}/{size}/{rotation}/{quality}{.format}
+
+        # first character is / so skip first empty bit
         bits = self.path.split('/')[1:]
-
-        if bits and bits[0] == "list":
-            return self.send(repr(self.identifiers), status=200, ct="text/plain");
-
         if bits:
             identifier = bits.pop(0)
             if self.idRe.match(identifier) == None:
