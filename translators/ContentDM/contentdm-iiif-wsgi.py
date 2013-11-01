@@ -344,7 +344,7 @@ class ServiceHandler(WsgiApp):
                     # exactly w and h, deforming aspect
                     sizeW = int(sw)
                     sizeH = int(sh)
-                    raise NotImplementedError()                
+                    return self.error_msg('size', 'arbitrary w,h is not supported by ContentDM')              
             except:
                 return self.error_msg('size', 'Size unparseable: %r' % size, status=400)      
         
