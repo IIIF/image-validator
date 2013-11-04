@@ -177,24 +177,23 @@ class ServiceHandler(WsgiApp):
     def make_info(self, infoId):
 
         try:
-            (imageW, imageH, itype) = INFO_CACHE[infoId]
+            (imageW, imageH) = INFO_CACHE[infoId]
         except:
             infoURI = CDM_BASE + ("action=1&CISOROOT=%s&CISOPTR=%s" % (CISOROOT, infoId))
             u = urllib.urlopen(infoURI)
             data = u.read()
-            if fh.code == 200:
+            if u.code == 200:
                 info = json.loads(data)
                 imageW = info['imageinfo']['width']
                 imageH = info['imageinfo']['height']
-                itype = info['imageinfo']['type']
-                INFO_CACHE[infoId] = (imageW, imageH, itype)
+                INFO_CACHE[infoId] = (imageW, imageH)
             else:
                 (imageW, imageH) = (800, 1321)
-                itype = 'jpg'
             fh.close()
 
         qualities = ['native','color']
-        formats = self.extensions.keys()
+
+        formats = ['jpg']
 
         info = {"@id": "%s/%s/%s" % (BASEURL, PREFIX, infoId),
                 "@context" : "http://library.stanford.edu/iiif/image-api/1.1/context.json",
@@ -291,10 +290,10 @@ class ServiceHandler(WsgiApp):
                 # convert pct into px
                 try:
                     x = float(x) ; y = float(y) ; w = float(w) ; h = float(h)
-                    x = int(x / 100.0 * imageW)
-                    y = int(y / 100.0 * imageH)
-                    w = int(w / 100.0 * imageW)
-                    h = int(h / 100.0 * imageH)
+                    x = float(x / 100.0 * imageW)
+                    y = float(y / 100.0 * imageH)
+                    w = float(w / 100.0 * imageW)
+                    h = float(h / 100.0 * imageH)
                 except:
                     return self.error_msg('region', 'unable to parse region: %r' % region, status=400)                     
             else:
@@ -338,7 +337,7 @@ class ServiceHandler(WsgiApp):
                     scale = int(min(ratioW, ratioH)*100)       
                 elif size.startswith('pct:'):     #pct: n
                     # n percent of size
-                    scale = int(size[4:])
+                    scale = float(size[4:])
                 else:    # w,h    or invalid
                     (sw,sh) = size.split(',')
                     # exactly w and h, deforming aspect
