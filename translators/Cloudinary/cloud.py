@@ -529,6 +529,10 @@ class ServiceHandler(WsgiApp):
             cloud_url.append("c_scale,w_%s,h_%s" % (sizeW, sizeH))
         if rotation != 0:
             cloud_url.append("a_%s" % rotation)
+        if quality == "grey":
+            cloud_url.append("e_grayscale")
+        elif quality == "bitonal":
+            cloud_url.append("e_blackwhite")
 
         cloud_url.append("%s.%s" % (identifier, format))
         location = "/".join(cloud_url)
