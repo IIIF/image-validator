@@ -245,7 +245,7 @@ class ServiceHandler(WsgiApp):
                 "protocol" : self.protocol,
                 "width":imageW,
                 "height":imageH,
-                "tiles" : [{'width':TILE_SIZE, 'scale_factors': all_scales}]
+                "tiles" : [{'width':TILE_SIZE, 'scale_factors': all_scales}],
                 "sizes" : sizes,
                 "profile": [self.compliance,
                     {
@@ -283,6 +283,8 @@ class ServiceHandler(WsgiApp):
 
         if method == "GET":
             return self.handle_GET();
+        elif not UPLOADS:
+            return self.error(405)
         elif method == "POST":
             return self.handle_POST();
         elif method == "PUT":
@@ -378,7 +380,6 @@ class ServiceHandler(WsgiApp):
                 fh.close()
                 self.identifiers[str(newid)] = fullfn
             except:
-                raise
                 return self.error(500, "Couldn't write to disk, sorry")
 
             mt = "application/json"
@@ -421,6 +422,7 @@ class ServiceHandler(WsgiApp):
             return self.error_msg("identifier", "Identifier unspecified", status=400)
 
         self.out_headers['Link'] = '<%s>;rel="profile"' % self.compliance
+        self.out_headers['Access-Control-Allow-Origin'] = '*'
 
         # Early cache check here
         fp = self.path[1:]
@@ -429,7 +431,12 @@ class ServiceHandler(WsgiApp):
             self.out_headers['location'] = "%s%s/%s/info.json" % (BASEURL, PREFIX, infoId)
             return ""            
         elif len(fp) > 9 and fp[-9:] == "info.json":
-            mimetype = "application/json"
+            # Check request headers for application/ld+json
+            inacc = self.in_headers.get('Accept', '')
+            if inacc.find('ld+json'):
+                mimetype = "application/ld+json"
+            else:
+                mimetype = "application/json"
         elif len(fp) > 4 and fp[-4] == '.':
             try:
                 mimetype = self.extensions[fp[-3:]]
@@ -437,7 +444,8 @@ class ServiceHandler(WsgiApp):
                 # no such format, early break
                 return self.error_msg('format', 'Unsupported format', status=400)
         if os.path.exists(fp):
-            self.out_headers['X-cache-hit'] = "1"
+            # Will only ever be canonical, otherwise would redirect
+            self.out_headers['Link'] += ', <%s%s/%s>;rel="canonical"' % (BASEURL, PREFIX, fp)
             return self.send_file(fp, mimetype)                    
                     
         if bits:
@@ -446,7 +454,10 @@ class ServiceHandler(WsgiApp):
                 # test for info.json
                 if region == "info.json":
                     # build and return info
-                    mt = "application/json"
+                    if inacc.find('ld+json'):
+                        mt = "application/ld+json"
+                    else:
+                        mt = "application/json"
                     if not os.path.exists(infoId +'/'+region):
                         image = Image.open(filename)
                         self.make_info(infoId, image)
@@ -468,6 +479,7 @@ class ServiceHandler(WsgiApp):
 
         if bits:
             rotation = bits.pop(0)
+            rotation = rotation.replace("%21", '!')
             m = self.rotationRe.match(rotation) 
             if m == None:
                 return self.error_msg("rotation", "Rotation invalid: %r" % rotation, status = 400)
@@ -609,7 +621,6 @@ class ServiceHandler(WsgiApp):
         if not quality in quals:
             return self.error_msg('quality', 'Quality not supported for this image: %r not in %r' % (quality, quals), status=501)
         if quality == quals[0]:
-            raise ValueError("%s vs %r" % (quality, quals))
             quality = "default"
         
         nformat = format.upper()
@@ -628,19 +639,22 @@ class ServiceHandler(WsgiApp):
             c_region = "full"
         else:
             c_region = "%s,%s,%s,%s" % (x,y,w,h)
+
         if sizeW == imageW and sizeH == imageH:
             c_size = "full"
+        elif float(sizeW) / imageW == float(sizeH) / imageH:
+            c_size = "%s," % (sizeW)
         else:
             c_size = "%s,%s" % (sizeW, sizeH)
 
         c_rot = "!%s" % rot if mirror else str(rot) 
         c_qual = "%s.%s" % (quality, format.lower())
-
         paths = [infoId, c_region, c_size, c_rot, c_qual]
         fn = os.path.join(*paths)
+        new_url = BASEURL + PREFIX + '/' + fn
+        self.out_headers['Link'] += ', <%s>;rel="canonical"' % new_url
+
         if fn != self.path[1:]:
-            new_url = BASEURL + PREFIX + '/' + fn
-            self.out_headers['Link'] += ', <%s>;rel="canonical"' % new_url
             self.out_headers['Location'] = new_url
             return self.send("", status=301)
 

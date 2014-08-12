@@ -31,7 +31,7 @@ CACHEDIR = HOMEDIR+"/webcache"
 BASEURL = "http://www.example.org/"
 PREFIX = "services/image/iiif"
 
-TILE_SIZE = 256
+TILE_SIZE = 512
 
 def parse_qs(data):
     # 2.4 doesn't have list comprehensions :(
@@ -270,7 +270,8 @@ class ServiceHandler(WsgiApp):
         else:
             return self.error_msg("identifier", "Identifier unspecified", status=400)
 
-        self.out_headers['Link'] = '<http://library.stanford.edu/iiif/image-api/compliance.html#level2>;rel="profile"'
+        self.out_headers['Link'] = '<http://library.stanford.edu/iiif/image-api/1.1/compliance.html#level2>;rel="profile"'
+        self.out_headers['Access-Control-Allow-Origin'] = '*'
 
         # Early cache check here
         fp = self.path[1:]
@@ -465,7 +466,7 @@ class ServiceHandler(WsgiApp):
         fn = os.path.join(*paths)
         if os.path.exists(fn):
             # Not canonical or would have been caught by early cache check
-            self.out_headers['Location'] = BASEURL + PREFIX + '/' + fn
+            self.out_headers['Location'] = BASEURL + '/'+ PREFIX + '/' + fn
             return self.send("", status=301)
 
         # And finally, process the image!
