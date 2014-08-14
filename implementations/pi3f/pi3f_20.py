@@ -595,9 +595,17 @@ class ServiceHandler(WsgiApp):
                         sizeH = 1
                 else:    # w,h    or invalid
                     (sw,sh) = size.split(',')
-                    # exactly w and h, deforming aspect
+                    # exactly w and h, deforming aspect (if necessary)
                     sizeW = int(sw)
-                    sizeH = int(sh)                
+                    sizeH = int(sh)  
+                    # Nasty hack to get the right canonical URI
+                    ratioW = sizeW/float(w)
+                    tempSizeH = int(sizeH / ratioW)
+                    if tempSizeH in [h, h-1, h+1]:
+                        ratio = 1
+                    else:
+                        ratio = 0
+
             except:
                 return self.error_msg('size', 'Size unparseable: %r' % size, status=400)      
 
@@ -640,9 +648,9 @@ class ServiceHandler(WsgiApp):
         else:
             c_region = "%s,%s,%s,%s" % (x,y,w,h)
 
-        if sizeW == imageW and sizeH == imageH:
+        if (sizeW == imageW and sizeH == imageH) or (w == sizeW and h == sizeH):
             c_size = "full"
-        elif float(sizeW) / imageW == float(sizeH) / imageH:
+        elif ratio:
             c_size = "%s," % (sizeW)
         else:
             c_size = "%s,%s" % (sizeW, sizeH)
