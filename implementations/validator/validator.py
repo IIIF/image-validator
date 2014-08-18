@@ -117,6 +117,7 @@ class TestSuite(object):
                     data = json.loads(doc)
                 except:
                     sys.stderr.write('failed to load data for test: %s\n' % t )
+                    sys.stderr.flush()
                     data = {}
                 name = t[5:]
                 if version and data.has_key('versions') and not version in data['versions']:
@@ -273,7 +274,7 @@ class TestSuite(object):
     def test_id_basic(self, result):
         """{"label":"Image is returned","level":0,"category":1,"versions":["1.0","1.1","2.0"]}"""
         try:
-            url = result.make_url()
+            url = result.make_url(params={})
             data = result.fetch(url)
             self.validationInfo.check('status', result.last_status, 200, result)
             img = result.make_image(data)
@@ -961,7 +962,7 @@ class TestSuite(object):
 
     def test_format_conneg(self, result):
         """{"label":"Negotiated format","level":1,"category":7,"versions":["1.0","1.1"]}"""          
-        url = result.make_url()
+        url = result.make_url(params={})
         hdrs = {'Accept': 'image/png;q=1.0'}
         try:
             r = urllib2.Request(url, headers=hdrs)
@@ -995,7 +996,7 @@ class TestSuite(object):
         
     def test_linkheader_profile(self, result):
         """{"label":"Profile Link Header","level":1,"category":7,"versions":["1.0","1.1","2.0"]}"""          
-        url = result.make_url()
+        url = result.make_url(params={})
         data = result.fetch(url)
         try:
             lh = result.last_headers['link']
@@ -1025,7 +1026,7 @@ class TestSuite(object):
     def test_linkheader_canonical(self, result):
         """{"label":"Canonical Link Header","level":3,"category":7,"versions":["2.0"]}"""  
 
-        url = result.make_url()
+        url = result.make_url(params={})
         data = result.fetch(url)
         try:
             lh = result.last_headers['link']
@@ -1062,7 +1063,8 @@ class TestSuite(object):
 
 
 class ImageAPI(object):
-    def __init__(self, identifier, server, prefix=None, scheme="http", auth="", version="2.0"):
+
+    def __init__(self, identifier, server, prefix="", scheme="http", auth="", version="2.0"):
 
         self.template = "{/prefix*}/{identifier}/{region}/{size}/{rotation}/{quality}{.format}"
         self.infoTemplate = "{/prefix*}/{identifier}/info.json"        
@@ -1187,8 +1189,6 @@ class ImageAPI(object):
 
     def fetch(self, url):
         # print url
-        sys.stderr.write('url: %s\n' % url)
-        sys.stderr.flush()
         try:
             wh = urllib2.urlopen(url)
         except urllib2.HTTPError, wh:
@@ -1225,7 +1225,9 @@ class ImageAPI(object):
             # format is required in 2.0+
             params['format'] = 'jpg'
 
+
         url = expand(self.template, params)
+
         scheme = params.get('scheme', self.scheme)
         server = params.get('server', self.server)
         url = "%s://%s%s" % (scheme, server, url)
@@ -1272,13 +1274,13 @@ class ImageAPI(object):
 
 class Validator(object):
 
+    def __init__(self):
+        sys.stderr.write('init on Validator');
+        sys.stderr.flush()
+
     def handle_test(self, testname):
 
         version = request.query.get('version', '2.0')
-
-        sys.stderr.write(repr(request.query.dict))
-        sys.stderr.flush()
-
         info = ValidationInfo()
         testSuite = TestSuite(info)
 
