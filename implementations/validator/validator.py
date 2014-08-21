@@ -948,7 +948,7 @@ class TestSuite(object):
         """{"label":"WebP format","level":3,"category":6,"versions":["2.0"]}"""           
 
         # chrs 8:12 == "WEBP"
-        params = {'format': 'jp2'}
+        params = {'format': 'webp'}
         url = result.make_url(params)
         # Need as plain string for magic
         wh = urllib.urlopen(url)
