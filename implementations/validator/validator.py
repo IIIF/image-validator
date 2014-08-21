@@ -19,8 +19,6 @@ try:
 except:
     import Image, ImageDraw
 
-from uritemplate import expand
-
 class ValidatorError(Exception):
     def __init__(self, type, got, expected, result=None):
         self.type = type
@@ -1066,9 +1064,6 @@ class ImageAPI(object):
 
     def __init__(self, identifier, server, prefix="", scheme="http", auth="", version="2.0"):
 
-        self.template = "{/prefix*}/{identifier}/{region}/{size}/{rotation}/{quality}{.format}"
-        self.infoTemplate = "{/prefix*}/{identifier}/info.json"        
-        self.infoXmlTemplate = "{/prefix*}/{identifier}/info.xml" 
         self.iiifNS = "{http://library.stanford.edu/iiif/image-api/ns/}"
 
         self.scheme = scheme
@@ -1225,12 +1220,14 @@ class ImageAPI(object):
             # format is required in 2.0+
             params['format'] = 'jpg'
 
-
-        url = expand(self.template, params)
+        order = ('prefix','identifier','region','size','rotation','quality')
+        url = '/'.join(params.get(p) for p in order if params.get(p) is not None)
+        if self.version == "2.0":
+            url+='.%s' % params['format']
 
         scheme = params.get('scheme', self.scheme)
         server = params.get('server', self.server)
-        url = "%s://%s%s" % (scheme, server, url)
+        url = "%s://%s/%s" % (scheme, server, url)
         return url
 
     def make_image(self, data):
@@ -1246,19 +1243,16 @@ class ImageAPI(object):
 
     def make_info_url(self, format='json'):
         params = {'server':self.server, 'identifier':self.identifier, 'scheme':self.scheme}
+        parts = [self.identifier, 'info']
         if self.prefix:
-            params['prefix'] = self.prefix
-        if format == 'xml':
-            url = expand(self.infoXmlTemplate, params)            
-        else:
-            url = expand(self.infoTemplate, params)
+            parts.insert(0, self.prefix)
+        url = '%s.%s' %  ('/'.join(parts), format)
         scheme = params.get('scheme', self.scheme)
         server = params.get('server', self.server)
-        url = "%s://%s%s" % (scheme, server, url)
+        url = "%s://%s/%s" % (self.scheme, self.server, url)
         return url
 
     def get_info(self):
-
         url = self.make_info_url()
         try:
             idata = self.fetch(url) 
@@ -1400,7 +1394,7 @@ def apache():
 
 def main():
     mr = Validator()
-    run(host='localhost', port=8080, app=mr.get_bottle_app())
+    run(host='localhost', reloader=True, port=8080, app=mr.get_bottle_app())
 
 
 if __name__ == "__main__":
