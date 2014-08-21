@@ -201,7 +201,7 @@ class TestSuite(object):
                             self.validationInfo.check('is-object', type(t), dict, result)
                             self.validationInfo.check('required-field: scale_factors', t.has_key('scale_factors'), True, result) 
                             self.validationInfo.check('required-field: width', t.has_key('width'), True, result)                        
-                            self.validationInfo.check('type-is-int: width', type(sz['width']), int, result)
+                            self.validationInfo.check('type-is-int: width', type(t['width']), int, result)
 
             return result
         except:
@@ -1186,8 +1186,8 @@ class ImageAPI(object):
         # print url
         try:
             wh = urllib2.urlopen(url)
-        except urllib2.HTTPError, wh:
-            pass                   
+        except:
+            raise ValidatorError()
         data = wh.read()
         # nasty side effect
         self.last_headers = wh.headers.dict
@@ -1221,13 +1221,17 @@ class ImageAPI(object):
             params['format'] = 'jpg'
 
         order = ('prefix','identifier','region','size','rotation','quality')
+
+        params['prefix'] = '/'.join(self.prefix)
         url = '/'.join(params.get(p) for p in order if params.get(p) is not None)
-        if self.version == "2.0":
+
+        if params.get('format') is not None:
             url+='.%s' % params['format']
 
         scheme = params.get('scheme', self.scheme)
         server = params.get('server', self.server)
         url = "%s://%s/%s" % (scheme, server, url)
+        print url
         return url
 
     def make_image(self, data):
@@ -1243,9 +1247,8 @@ class ImageAPI(object):
 
     def make_info_url(self, format='json'):
         params = {'server':self.server, 'identifier':self.identifier, 'scheme':self.scheme}
-        parts = [self.identifier, 'info']
-        if self.prefix:
-            parts.insert(0, self.prefix)
+        parts = self.prefix[:]
+        parts.extend([self.identifier, 'info'])
         url = '%s.%s' %  ('/'.join(parts), format)
         scheme = params.get('scheme', self.scheme)
         server = params.get('server', self.server)
