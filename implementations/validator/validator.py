@@ -81,8 +81,13 @@ class ValidationInfo(object):
     def make_randomstring(self, length):
         stuff = []
         for x in range(length):
-            stuff.append(chr(random.randint(48, 122)))
-        return ''.join(stuff)
+            stuff.append(chr(random.randint(48, 122)))    
+        val = ''.join(stuff)
+        # prevent end-of-path-segment characters
+        val = val.replace('?', '$')
+        val = val.replace('#', '$')
+        val = val.replace('/', '$')
+        return val
 
     def check(self, typ, got, expected, result=None):
         if type(expected) == list:
@@ -1186,8 +1191,10 @@ class ImageAPI(object):
         # print url
         try:
             wh = urllib2.urlopen(url)
+        except urllib2.HTTPError, e:
+            wh = e
         except:
-            raise ValidatorError()
+            raise 
         data = wh.read()
         # nasty side effect
         self.last_headers = wh.headers.dict
