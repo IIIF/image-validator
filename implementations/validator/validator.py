@@ -204,7 +204,7 @@ class TestSuite(object):
                         self.validationInfo.check('is-list', type(tiles), list, result)
                         for t in tiles:
                             self.validationInfo.check('is-object', type(t), dict, result)
-                            self.validationInfo.check('required-field: scale_factors', t.has_key('scale_factors'), True, result) 
+                            self.validationInfo.check('required-field: scaleFactors', t.has_key('scaleFactors'), True, result) 
                             self.validationInfo.check('required-field: width', t.has_key('width'), True, result)                        
                             self.validationInfo.check('type-is-int: width', type(t['width']), int, result)
 
@@ -998,7 +998,7 @@ class TestSuite(object):
         return result
         
     def test_linkheader_profile(self, result):
-        """{"label":"Profile Link Header","level":1,"category":7,"versions":["1.0","1.1","2.0"]}"""          
+        """{"label":"Profile Link Header","level":3,"category":7,"versions":["1.0","1.1","2.0"]}"""          
         url = result.make_url(params={})
         data = result.fetch(url)
         try:

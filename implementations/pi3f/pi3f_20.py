@@ -245,12 +245,12 @@ class ServiceHandler(WsgiApp):
                 "protocol" : self.protocol,
                 "width":imageW,
                 "height":imageH,
-                "tiles" : [{'width':TILE_SIZE, 'scale_factors': all_scales}],
+                "tiles" : [{'width':TILE_SIZE, 'scaleFactors': all_scales}],
                 "sizes" : sizes,
                 "profile": [self.compliance,
                     {
                         "formats":["gif","tif","pdf"],
-                        "supports":["canonical_link_header", "mirroring", "rotation_arbitrary", "size_above_full"],
+                        "supports":["canonicalLinkHeader", "profileLinkHeader", "mirroring", "rotationArbitrary", "sizeAboveFull"],
                         "qualities":qualities
                     }
                 ]
