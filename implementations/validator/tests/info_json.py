@@ -28,6 +28,8 @@ class Test_Info_Json(BaseTest):
 
                 self.validationInfo.check('required-field: @id', info.has_key('@id'), True, result)
                 self.validationInfo.check('type-is-uri: @id', info['@id'].startswith('http'), True, result)
+                # Check id is same as request URI
+                self.validationInfo.check('@id is correct URI', info['@id'] == result.last_url.replace('/info.json', ''), True, result)
 
                 self.validationInfo.check('required-field: @context', info.has_key('@context'), True, result)
                 if result.version == "1.1":

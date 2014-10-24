@@ -2,7 +2,7 @@
 from functools import partial
 from bottle import Bottle, route, run, request, response, abort, error
 
-# Black Module Magic
+# Black Module Magic to get tests in the right place
 import tests
 from tests import *
 all_tests = tests.__all__
