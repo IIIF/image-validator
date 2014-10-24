@@ -287,7 +287,8 @@ class ImageAPI(object):
 
         order = ('prefix','identifier','region','size','rotation','quality')
 
-        params['prefix'] = '/'.join(self.prefix)
+        if 'prefix' in params:
+            params['prefix'] = '/'.join(self.prefix)
         url = '/'.join(params.get(p) for p in order if params.get(p) is not None)
 
         if params.get('format') is not None:
@@ -312,7 +313,10 @@ class ImageAPI(object):
 
     def make_info_url(self, format='json'):
         params = {'server':self.server, 'identifier':self.identifier, 'scheme':self.scheme}
-        parts = self.prefix[:]
+        if self.prefix:
+            parts = self.prefix[:]
+        else:
+            parts = []
         parts.extend([self.identifier, 'info'])
         url = '%s.%s' %  ('/'.join(parts), format)
         scheme = params.get('scheme', self.scheme)
