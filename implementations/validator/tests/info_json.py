@@ -1,5 +1,5 @@
 
-from test import BaseTest
+from test import BaseTest, ValidatorError
 
 class Test_Info_Json(BaseTest):
     label = "Check Image Information"
@@ -15,6 +15,8 @@ class Test_Info_Json(BaseTest):
         # Does server have info.json
         try:
             info = result.get_info()
+            if info == None:
+                raise ValidatorError('info.json is JSON', True, False, result)
 
             self.validationInfo.check('required-field: width', info.has_key('width'), True, result)
             self.validationInfo.check('required-field: height', info.has_key('height'), True, result)

@@ -330,11 +330,11 @@ class ImageAPI(object):
             idata = self.fetch(url) 
         except:
             # uhoh
-            return {}
+            return None
         try:
             info = json.loads(idata)
         except:
-            return {}
+            return None
         return info
 
 
