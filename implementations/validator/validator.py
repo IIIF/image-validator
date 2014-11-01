@@ -109,6 +109,7 @@ class TestSuite(object):
         return hasattr(self, 'test_%s' % test)
           
     def list_tests(self, version=""):
+        """Find tests from json data in documentation for each test_* method"""
         all = dir(self)
         tests = {}
         for t in all:
@@ -1229,7 +1230,7 @@ class ImageAPI(object):
 
         order = ('prefix','identifier','region','size','rotation','quality')
 
-        params['prefix'] = '/'.join(self.prefix)
+        params['prefix'] = '/'.join(self.prefix) if (self.prefix) else None
         url = '/'.join(params.get(p) for p in order if params.get(p) is not None)
 
         if params.get('format') is not None:
@@ -1279,7 +1280,7 @@ class ImageAPI(object):
 class Validator(object):
 
     def __init__(self):
-        sys.stderr.write('init on Validator');
+        sys.stderr.write('init on Validator\n');
         sys.stderr.flush()
 
     def handle_test(self, testname):
