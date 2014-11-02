@@ -18,6 +18,7 @@ import json
 import StringIO
 import sys
 import random
+import os
 
 try:
     from PIL import Image, ImageDraw
@@ -125,9 +126,10 @@ class TestSuite(object):
  
 class ImageAPI(object):
 
-    def __init__(self, identifier, server, prefix="", scheme="http", auth="", version="2.0"):
+    def __init__(self, identifier, server, prefix="", scheme="http", auth="", version="2.0", debug=True):
 
         self.iiifNS = "{http://library.stanford.edu/iiif/image-api/ns/}"
+        self.debug = debug
 
         self.scheme = scheme
         self.server = server
@@ -297,7 +299,8 @@ class ImageAPI(object):
         scheme = params.get('scheme', self.scheme)
         server = params.get('server', self.server)
         url = "%s://%s/%s" % (scheme, server, url)
-        print url
+        if (self.debug):
+            print url
         return url
 
     def make_image(self, data):
@@ -340,9 +343,10 @@ class ImageAPI(object):
 
 class Validator(object):
 
-    def __init__(self):
-        sys.stderr.write('init on Validator');
-        sys.stderr.flush()
+    def __init__(self,debug=True):
+        if (debug):
+            sys.stderr.write('init on Validator\n')
+            sys.stderr.flush()
 
     def handle_test(self, testname):
 
@@ -357,7 +361,7 @@ class Validator(object):
             return "No such test: %s" % testname
 
         server = request.query.get('server', '')
-        server = server.strip();
+        server = server.strip()
         if server.startswith('https://'):
             scheme = 'https'
             server = server.replace('https://', '')
@@ -461,7 +465,7 @@ class Validator(object):
 
 
 def apache():
-    v = Validator();
+    v = Validator()
     return v.get_bottle_app()
 
 def main():
@@ -471,5 +475,5 @@ def main():
 
 if __name__ == "__main__":
     main()
-else:
+elif (not os.getenv('VALIDATOR_AS_MODULE')):
     application = apache()
