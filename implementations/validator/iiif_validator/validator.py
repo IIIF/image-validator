@@ -472,8 +472,5 @@ def main():
     mr = Validator()
     run(host='localhost', reloader=True, port=8080, app=mr.get_bottle_app())
 
-
 if __name__ == "__main__":
     main()
-elif (not os.getenv('VALIDATOR_AS_MODULE')):
-    application = apache()

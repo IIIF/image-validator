@@ -9,10 +9,7 @@ expected compliance level. Exit code is zero for success, non-zero
 otherwise (number of failed tests).
 """
 
-#kuldge to fix mode of validator.py
-import os
-os.environ['VALIDATOR_AS_MODULE']='1'
-from validator import ValidationInfo,TestSuite,ImageAPI
+from iiif_validator.validator import ValidationInfo,TestSuite,ImageAPI
 import logging
 import optparse
 import sys
