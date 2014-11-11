@@ -59,7 +59,7 @@ class ValidationInfo(object):
     def do_test_square(self, img, x,y, result):
         truth = self.colorInfo[x][y]
         # Similarity, not necessarily perceived
-        cols = img.getcolors()
+        cols = img.getcolors(maxcolors=1000000) #1kx1k image so <=1M colors
         cols.sort(reverse=True)
         col = cols[0][1]
         ok = abs(col[0]-truth[0]) < 6 and abs(col[1]-truth[1]) < 6 and abs(col[2]-truth[2]) < 6
