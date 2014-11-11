@@ -45,7 +45,7 @@ install:
 and then a single validation can be added to the commands under
 the `script:` section of `.travis.yml`. For example, to test a 
 server running with base URI `http://localhost:8000/prefix` with
-image `image_id1` at version 1.1, level , one might use:
+image `image_id1` at version 1.1, level 1, one might use:
 
 ```
 script:
