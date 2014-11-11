@@ -20,7 +20,7 @@ setup(
     version=version,
     packages=['iiif_validator','iiif_validator.tests'],
     scripts=['iiif-validator.py','iiif-validate.py'],
-    classifiers=["Development Status :: 2 - Beta",
+    classifiers=["Development Status :: 5 - Production/Stable",
                  "Intended Audience :: Developers",
                  "Operating System :: OS Independent", #is this true? know Linux & OS X ok
                  "Programming Language :: Python",
