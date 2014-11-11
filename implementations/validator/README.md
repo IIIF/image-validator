@@ -23,34 +23,35 @@ Then for an image served at `http://localhost:8000/prefix/image_id`
 tha validator can be run with:
 
 ```
-./validate.py -s localhost:8000 -p prefix -i image_id --version=2.0 -v
+iiif-validate.py -s localhost:8000 -p prefix -i image_id --version=2.0 -v
 ```
  
-or similar to validate server with the test image. Use `./validate -h` for 
-parameter details.
+or similar to validate server with the test image. Use 
+`iiif-validate -h` for parameter details.
 
-## Using `validate.sh` with Travis CI
+## Using `iiif-validate.py` with Travis CI
 
 To install dependencies for this code the following lines must 
 be present in the `install:` section of `.travis.yml`:
 
 ```
 install:
-  ...
-  - pip install Pillow
   - sudo apt-get update
   - sudo apt-get install libmagic-dev
-  - pip install bottle python-magic lxml
+  - pip install Pillow iiif_validator
+  ...
 ```
 
 and then a single validation can be added to the commands under
-the `script:` section of     `.travis.yml`:
+the `script:` section of `.travis.yml`. For example, to test a 
+server running with base URI `http://localhost:8000/prefix` with
+image `image_id1` at version 1.1, level , one might use:
 
 ```
 script:
   ...
-  - ./validate.py -s localhost:8000 -p prefix -i image_id1 --version=1.1 --level 1 --quiet
+  - iiif-validate.py -s localhost:8000 -p prefix -i image_id1 --version=1.1 --level 1 --quiet
 ```
 
-The `validate.py` script returns 0 exit code on success, non-zero on failure,
-in order to work easily with Travis CI.
+The `iiif-validate.py` script returns 0 exit code on success, non-zero 
+on failure, in order to work easily with Travis CI.
