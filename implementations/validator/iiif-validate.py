@@ -9,13 +9,11 @@ expected compliance level. Exit code is zero for success, non-zero
 otherwise (number of failed tests).
 """
 
-#kuldge to fix mode of validator.py
-import os
-os.environ['VALIDATOR_AS_MODULE']='1'
-from validator import ValidationInfo,TestSuite,ImageAPI
+from iiif_validator.validator import ValidationInfo,TestSuite,ImageAPI
 import logging
 import optparse
 import sys
+import traceback
 
 # Options and arguments
 p = optparse.OptionParser(description='IIIF Command Line Validator',
@@ -62,8 +60,8 @@ for testname in tests:
     try:
         info = ValidationInfo()
         testSuite = TestSuite(info) 
-        result = ImageAPI(opt.identifier, opt.server, opt.prefix, opt.scheme, opt.auth, opt.version, 
-                          debug=False)
+        result = ImageAPI(opt.identifier, opt.server, opt.prefix, opt.scheme, 
+                          opt.auth, opt.version, debug=False)
         testSuite.run_test(testname, result)
         if result.exception:
             e = result.exception
@@ -75,7 +73,9 @@ for testname in tests:
             logging.info("  url: %s\n  tests: %s\n"%(result.urls,result.tests))
     except Exception as e:
         bad += 1
+        trace=traceback.format_exc()
         logging.error("%s FAIL"%test_str)
         logging.error("  exception: %s\n"%(str(e)))
+        logging.info(trace)
 logging.warning("Done (%d tests, %d failures)" % (n,bad))
 exit(bad)
