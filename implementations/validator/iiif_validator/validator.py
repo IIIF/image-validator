@@ -62,6 +62,10 @@ class ValidationInfo(object):
         cols = img.getcolors(maxcolors=1000000) #1kx1k image so <=1M colors
         cols.sort(reverse=True)
         col = cols[0][1]
+        # If image has palette, col is int and we look up [r,g,b]
+        pal = img.getpalette()
+        if (pal):
+            col = [pal[col*3],pal[col*3+1],pal[col*3+2]]
         ok = abs(col[0]-truth[0]) < 6 and abs(col[1]-truth[1]) < 6 and abs(col[2]-truth[2]) < 6
         result.tests.append("%s,%s:%s" % (x,y,ok))
         return ok           
