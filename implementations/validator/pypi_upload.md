@@ -1,10 +1,10 @@
 ===============================
-Updating iiif_validator on pypi
+Updating iiif-validator on pypi
 ===============================
 
 Notes to remind zimeon...
 
-iiif_validator is at https://pypi.python.org/pypi/iiif_validator
+iiif-validator is at https://pypi.python.org/pypi/iiif-validator
 
 Putting up a new version
 ------------------------
@@ -17,7 +17,7 @@ Putting up a new version
 5. Make sure master README has correct travis-ci icon link  --- no tests yet, skip
 6. Check branches are as expected (git branch -a)
 7. Check local build and version reported OK (python setup.py build; sudo python setup.py install)
-8. Check iiif_validator.py correctly starts server and runs tests
+8. Check iiif-validator.py correctly starts server and runs tests
 9. If all checks out OK, tag and push the new version to github with something like:
 
     ```
@@ -29,6 +29,6 @@ Putting up a new version
     python setup.py sdist upload
     ```
 
-10. Then check on PyPI at https://pypi.python.org/pypi/iiif_validator
+10. Then check on PyPI at https://pypi.python.org/pypi/iiif-validator
 11. Finally, back on working branch start new version number by editing iiif_validator/_version.py and CHANGES.md
 

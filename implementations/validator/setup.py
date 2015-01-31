@@ -16,7 +16,7 @@ else:
     raise RuntimeError("Unable to find version string in %s." % (VERSIONFILE))
 
 setup(
-    name='iiif_validator',
+    name='iiif-validator',
     version=version,
     packages=['iiif_validator','iiif_validator.tests'],
     scripts=['iiif-validator.py','iiif-validate.py'],
