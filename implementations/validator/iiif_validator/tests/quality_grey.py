@@ -11,14 +11,13 @@ class Test_Quality_Grey(BaseTest):
         try:
             params = {'quality': 'grey'}
             img = result.get_image(params)
-            # self.validationInfo.check('quality', img.mode, 'L', result)
 
-            cols = img.getcolors()
             if img.mode == 1:
                 return self.validationInfo.check('quality', 1, 0, result)
             elif img.mode == 'L':
                 return self.validationInfo.check('quality', 1, 1, result)
             else:
+                cols = img.getcolors(maxcolors=1000000) #1kx1k image so <=1M colors
                 # check vast majority of px are triples with v similar r,g,b
                 ttl = 0
                 for c in cols:
