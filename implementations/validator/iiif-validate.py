@@ -9,13 +9,11 @@ expected compliance level. Exit code is zero for success, non-zero
 otherwise (number of failed tests).
 """
 
-#kuldge to fix mode of validator.py
-import os
-os.environ['VALIDATOR_AS_MODULE']='1'
-from validator import ValidationInfo,TestSuite,ImageAPI
+from iiif_validator.validator import ValidationInfo,TestSuite,ImageAPI
 import logging
 import optparse
 import sys
+import traceback
 
 # Options and arguments
 p = optparse.OptionParser(description='IIIF Command Line Validator',
@@ -34,6 +32,8 @@ p.add_option('--version', action='store', default='2.0',
              help="IIIF API version to test for (default 2.0)")
 p.add_option('--level', action='store', type='int', default=1,
              help="compliance level to test (default 1)")
+p.add_option('--test', action='append', type='string',
+             help="run specific named tests, ignores --level (repeatable)")
 p.add_option('--verbose', '-v', action='store_true',
              help="be verbose")
 p.add_option('--quiet','-q', action='store_true',
@@ -55,15 +55,18 @@ tests = TestSuite(info2).list_tests(opt.version)
 n = 0
 bad = 0
 for testname in tests:
-    if (tests[testname]['level']>opt.level):
+    if (opt.test):
+        if (testname not in opt.test):
+            continue
+    elif (tests[testname]['level']>opt.level):
         continue
     n += 1
     test_str = ("[%d] test %s" % (n,testname))
     try:
         info = ValidationInfo()
         testSuite = TestSuite(info) 
-        result = ImageAPI(opt.identifier, opt.server, opt.prefix, opt.scheme, opt.auth, opt.version, 
-                          debug=False)
+        result = ImageAPI(opt.identifier, opt.server, opt.prefix, opt.scheme, 
+                          opt.auth, opt.version, debug=False)
         testSuite.run_test(testname, result)
         if result.exception:
             e = result.exception
@@ -75,7 +78,9 @@ for testname in tests:
             logging.info("  url: %s\n  tests: %s\n"%(result.urls,result.tests))
     except Exception as e:
         bad += 1
+        trace=traceback.format_exc()
         logging.error("%s FAIL"%test_str)
         logging.error("  exception: %s\n"%(str(e)))
+        logging.info(trace)
 logging.warning("Done (%d tests, %d failures)" % (n,bad))
 exit(bad)

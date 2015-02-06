@@ -11,7 +11,8 @@ class Test_Quality_Color(BaseTest):
         try:
             params = {'quality': 'color'}
             img = result.get_image(params)
-            self.validationInfo.check('quality', img.mode, 'RGB', result)
+            # XXX should check we actually are getting color back
+            self.validationInfo.check('quality', img.mode, ['RGB','P'], result)
             return result
         except:
             self.validationInfo.check('status', result.last_status, 200, result)
