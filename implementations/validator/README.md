@@ -19,6 +19,8 @@ brew install libmagic
 pip install lxml bottle python-magic pillow
 ```
 
+## Running the command line validator, `iiif-validate.py`
+
 Then for an image served at `http://localhost:8000/prefix/image_id`
 tha validator can be run with:
 
@@ -55,3 +57,39 @@ script:
 
 The `iiif-validate.py` script returns 0 exit code on success, non-zero 
 on failure, in order to work easily with Travis CI.
+
+## Running the stand-alone validator server, `iiif-validator.py`
+
+The validator server runs at <http://localhost:8080/> by
+default, the URI path is the test name and then the query
+parameters give the details of the server and image to 
+be tested. The URI pattern is:
+
+```
+  http://localhost:8080/{test_name}?server={server}&prefix={prefix}&identifer={id}&version={api_version}
+```
+
+As an example, if the test server <https://pypi.python.org/pypi/iiif> is installed and run locally.
+
+```
+easy_install iiif
+iiif_testserver.py
+```
+
+which will set up a server at <http://localhost:8000/> and write the log of accesses to STDOUT. The one can run validation tests against this with requests like:
+
+<http://localhost:8080/info_json?server=localhost:8000&prefix=/2.0_pil_none&identifier=67352ccc-d1b0-11e1-89ae-279075081939.png&version=2.0> which tests the `info.json` response and gives JSON output:
+
+```json
+{"test": "info_json", "status": "success", "tests": ["required-field: width", "required-field: height", "type-is-int: height", "type-is-int: width", "required-field: @id", "type-is-uri: @id", "@id is correct URI", "required-field: @context", "correct-context", "required-field: protocol", "correct-protocol", "required-field: profile", "is-list", "profile-compliance", "is-list", "is-object", "required-field: scaleFactors", "required-field: width", "type-is-int: width"], "url": ["http://localhost:8000/2.0_pil_none/67352ccc-d1b0-11e1-89ae-279075081939.png/info.json"], "label": "Check Image Information"}
+```
+
+<http://localhost:8080/rot_mirror?server=localhost:8000&prefix=/2.0_pil_none&identifier=67352ccc-d1b0-11e1-89ae-279075081939.png&version=2.0> which tests mirroring will give JSON output:
+
+```json
+{"test": "rot_mirror", "status": "success", "tests": ["9,0:True", "0,9:True"], "url": ["http://localhost:8000/2.0_pil_none/67352ccc-d1b0-11e1-89ae-279075081939.png/full/full/!0/default.jpg"], "label": "Mirroring"}
+```
+
+## Running the validator server under WSGI
+
+_need docs here_
