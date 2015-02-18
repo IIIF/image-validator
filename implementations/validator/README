@@ -1,1 +1,116 @@
-README.md
+==============
+IIIF Validator
+==============
+
+This validator supports the same validations that are available on the
+`IIIF
+<http://iiif.io/>`_ website at
+`<http://iiif.io/api/image/validator/>`_.
+
+
+Installation
+------------
+
+Dependencies:
+
+  * lxml
+  * bottle
+  * python-magic (which requires libmagic)
+  * PIL (via Pillow)
+
+On a mac one can do::
+
+    brew install libmagic
+    pip install lxml bottle python-magic pillow
+
+
+Command line validator, ``iiif-validate.py``
+--------------------------------------------
+
+Then for an image served at ``http://localhost:8000/prefix/image_id``
+the validator can be run with::
+
+    iiif-validate.py -s localhost:8000 -p prefix -i image_id --version=2.0 -v
+
+or similar to validate server with the test image. Use
+``iiif-validate -h`` for parameter details.
+
+
+Use with Travis CI
+~~~~~~~~~~~~~~~~~~
+
+To install dependencies for this code the following lines must
+be present in the ``install:`` section of ``.travis.yml``::
+
+    install:
+      - sudo apt-get update
+      - sudo apt-get install libmagic-dev
+      - pip install Pillow iiif_validator
+      ...
+
+and then a single validation can be added to the commands under
+the ``script:`` section of ``.travis.yml``. For example, to test a
+server running with base URI ``http://localhost:8000/prefix`` with
+image ``image_id1`` at version 1.1, level 1, one might use::
+
+    script:
+      ...
+      - iiif-validate.py -s localhost:8000 -p prefix -i image_id1 --version=1.1 --level 1 --quiet
+
+The `iiif-validate.py` script returns 0 exit code on success, non-zero
+on failure, in order to work easily with Travis CI.
+
+
+Running the validator server, `iiif-validator.py`
+-------------------------------------------------
+
+The primary installation of the validator server is on the `IIIF
+<http://iiif.io/>`_ website at
+`<http://iiif.io/api/image/validator/>`_.
+
+Stand-alone server
+~~~~~~~~~~~~~~~~~~
+
+The validator server runs at `<http://localhost:8080/>`_ by
+default, the URI path is the test name and then the query
+parameters give the details of the server and image to
+be tested. The URI pattern is::
+
+    http://localhost:8080/{test_name}?server={server}&prefix={prefix}&identifer={id}&version={api_version}
+
+As an example, if the test server <https://pypi.python.org/pypi/iiif> is installed and run locally::
+
+    easy_install iiif
+    iiif_testserver.py
+
+which will set up a server at `<http://localhost:8000/>`_ and write the log of accesses to STDOUT. The one can run validation tests against this with requests like `<http://localhost:8080/info_json?server=localhost:8000&prefix=/2.0_pil_none&identifier=67352ccc-d1b0-11e1-89ae-279075081939.png&version=2.0>`_ which tests the `info.json` response and gives JSON output (pretty formatted here)::
+
+    {
+      "test": "info_json",
+      "status": "success",
+      "tests": ["required-field: width", "required-field: height", "type-is-int: height", "type-is-int: width", "required-field: @id", "type-is-uri: @id", "@id is correct URI", "required-field: @context", "correct-context", "required-field: protocol", "correct-protocol", "required-field: profile", "is-list", "profile-compliance", "is-list", "is-object", "required-field: scaleFactors", "required-field: width", "type-is-int: width"],
+      "url": ["http://localhost:8000/2.0_pil_none/67352ccc-d1b0-11e1-89ae-279075081939.png/info.json"],
+      "label": "Check Image Information"
+    }
+
+and `<http://localhost:8080/rot_mirror?server=localhost:8000&prefix=/2.0_pil_none&identifier=67352ccc-d1b0-11e1-89ae-279075081939.png&version=2.0>`_ which tests mirroring and will give JSON output (again pretty formatted)::
+
+    {
+      "test": "rot_mirror",
+      "status": "success",
+      "tests": ["9,0:True", "0,9:True"],
+      "url": ["http://localhost:8000/2.0_pil_none/67352ccc-d1b0-11e1-89ae-279075081939.png/full/full/!0/default.jpg"],
+      "label": "Mirroring"
+    }
+
+
+Validator server under WSGI
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+*need docs here*
+
+
+Editing this README
+-------------------
+
+This README is in reStructuredText and not gfm because that is what pypi will render. An editor like `<http://rst.ninjs.org/>`_ is useful for editing/checking interactively.
