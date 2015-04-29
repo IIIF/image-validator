@@ -15,13 +15,18 @@ import re
 import math
 import sys
 
+from lxml import etree
 
 BASEURL = 'http://showcase.iiif.io/'
-PREFIX = 'shims/chroniclingamerica/image'
+PREFIX = 'shims/chroniclingamerica/image/lccn'
 BASEPREF = BASEURL + PREFIX + '/'
+CACHEDIR = '/path/to/image/cache'
+
 
 TILE_SIZE=512
 SCALE_FACTORS=[1,2,4,8]
+INFO_CACHE = {}
+
 
 class ImageApp(object):
 
@@ -61,7 +66,7 @@ class ImageApp(object):
         self.rotationRe = re.compile(rot)
         self.qualityRe = re.compile(quality)
         self.formatRe = re.compile(format)        
-        self.infoRe = re.compile("/" + id + '/info.json')
+        self.infoRe = re.compile("/" + idr + '/info.json')
         self.badcharRe= re.compile('[\[\]?@#/]')
 
     def send(self, data, status=200, ct="text/plain"):
@@ -311,7 +316,10 @@ class ImageApp(object):
         # 360 --> 0
         rot = rot % 360
 
-        quals = info['profile'][1]['qualities']
+        try:
+            quals = info['profile'][1]['qualities']
+        except:
+            quals = []
         quals.extend(["default","bitonal"])
         if not quality in quals:
             return self.error_msg('quality', 'Quality not supported for this image: %r not in %r' % (quality, quals), status=501)
@@ -348,15 +356,15 @@ class ImageApp(object):
         new_url = BASEPREF + fn
         response['Link'] += ', <%s>;rel="canonical"' % new_url
 
-        if fn != path:
+        if fn.replace("%7E", '~') != path:
             response['Location'] = new_url
             return self.send("", status=301)
 
         # generate new URL here
         url = self.make_url(infoId,x,y,w,h,imageW,imageH,sizeW,sizeH,rot,mirror,quality,format)
         response['Location'] = url
-
-        return self.send("", status=302)
+        # Use 301 to make clients cache the redirected location
+        return self.send("", status=301)
 
 
     def get_info(self, infoId):
@@ -376,9 +384,8 @@ class ImageApp(object):
         info2 = self.build_info(infoId)
         info.update(info2)
 
-
-        # broad defaults
-
+        imageW = int(info['width'])
+        imageH = int(info['height'])
 
         if not info.has_key('sizes'):
             sizes = []
@@ -395,25 +402,32 @@ class ImageApp(object):
 
     def build_info(self, infoId):
         # Do translation here
-        # Translate ~s to /s in the identifier
-        infoId = infoId.replace('~', '/')
-        infoId = infoId.replace("%7E", '/')
-        tgt = "http://chroniclingamerica.loc.gov/lccn/%s.rdf" % (infoId)
 
-        try:
-            (imageW, imageH) = INFO_CACHE[tgt]
-        except:
+        # Check cache first
+        cached = os.path.join(CACHEDIR, "%s.rdf" % infoId)
+        if os.path.exists(cached):
+            fh = file(cached)
+            data = fh.read()
+            fh.close()
+        else:
+            infoId = infoId.replace('~', '/')
+            infoId = infoId.replace('%7E', '/')
+            tgt = "http://chroniclingamerica.loc.gov/lccn/%s.rdf" % (infoId)
+
             try:
                 fh = urllib.urlopen(tgt)
                 data = fh.read()
                 fh.close()
-                dom = etree.XML(data)
-                imageW = int(dom.xpath('//exif:width/text()', namespaces={'exif':'http://www.w3.org/2003/12/exif/ns#'})[0])
-                imageH = int(dom.xpath('//exif:height/text()', namespaces={'exif':'http://www.w3.org/2003/12/exif/ns#'})[0])
-                INFO_CACHE[tgt] = (imageW, imageH)
+                fh2 = file(cached, 'w')
+                fh2.write(data)
+                fh2.close()
             except:
                 raise
-                return {}
+
+        dom = etree.XML(data)
+        imageW = int(dom.xpath('//exif:width/text()', namespaces={'exif':'http://www.w3.org/2003/12/exif/ns#'})[0])
+        imageH = int(dom.xpath('//exif:height/text()', namespaces={'exif':'http://www.w3.org/2003/12/exif/ns#'})[0])
+
         info = {
                 "width":imageW,
                 "height":imageH       
@@ -423,6 +437,7 @@ class ImageApp(object):
     def make_url(self,identifier,x,y,w,h,imageW,imageH,sizeW,sizeH,rot,mirror,quality,format):
         # Do mapping from parsed data to external image URL here
         identifier = identifier.replace('~', '/')
+        identifier = identifier.replace('%7E', '/')
         url = "http://chroniclingamerica.loc.gov/lccn/%s/image_%sx%s_from_%s,%s_to_%s,%s.jpg" % (
             identifier, sizeW, sizeH, x,y, x+w, y+h)
         return url
