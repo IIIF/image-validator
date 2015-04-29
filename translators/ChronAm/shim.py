@@ -1,117 +1,186 @@
 
+#egg_cache = "/path/to/scripts/egg_cache"
+import os
+#os.environ['PYTHON_EGG_CACHE'] = egg_cache
 
-try:
-    import ljson as json
-except:
-    import json
+import json
+import bottle
+from bottle import Bottle, route, run, request, response, abort, error, redirect
 
-from functools import partial
-from bottle import Bottle, route, run, request, response, abort, error
-
-from lxml import etree
-import uuid
-import datetime
-
-import cgitb
-import urllib, urllib2, urlparse
+import urllib, urlparse, urllib2
 
 import StringIO
-import os, sys
+import glob
 import re
-import random
 import math
-from uritemplate import expand
+import sys
 
+
+BASEURL = 'http://showcase.iiif.io/'
+PREFIX = 'shims/chroniclingamerica/image'
+BASEPREF = BASEURL + PREFIX + '/'
 
 TILE_SIZE=512
 SCALE_FACTORS=[1,2,4,8]
-FORMATS = ['jpg']
-QUALITIES = ['native']
-SERVER = "http://localhost:8080"
-PFX = ""
 
-INFO_CACHE = {}
-
-class ChronAmShim(object):
+class ImageApp(object):
 
     def __init__(self):
-        id = "([^/#?@]+)"
-        region = "(full|(pct:)?([\d.]+,){3}([\d.]+))"
-        size = "(full|[\d.]+,|,[\d.]+|pct:[\d.]+|[\d.]+,[\d.]+|![\d.]+,[\d.]+)"
-        rot = "([0-9.+])"
-        quality = "(native|color|grey|bitonal)"
-        format = "(jpg|tif|png|gif|jp2|pdf|eps|bmp)"        
-        #ire = '/' + '/'.join([id,region,size,rot,quality]) + "(." + format + ")?"
+        self.cache = {}
 
-        self.idRe = re.compile(id)
+        self.formats = {'BMP' : 'image/bmp',  
+                   'GIF' : 'image/gif', 
+                   'JPEG': 'image/jpeg', 
+                   'PCX' : 'image/pcx', 
+                   'PDF' :  'application/pdf', 
+                   'PNG' : 'image/png', 
+                   'TIFF' : 'image/tiff'}
+
+        self.extensions = {'bmp' : 'image/bmp',  
+                   'gif' : 'image/gif', 
+                   'jpg': 'image/jpeg', 
+                   'pcx' : 'image/pcx', 
+                   'pdf' :  'application/pdf', 
+                   'png' : 'image/png', 
+                   'tif' : 'image/tiff'}
+
+        self.compliance = "http://iiif.io/api/image/2/level0.json"
+        self.context = "http://iiif.io/api/image/2/context.json"
+        self.protocol = "http://iiif.io/api/image"
+        
+        idr = "([^/#?@]+)"
+        region = "(full|(pct:)?([\d.]+,){3}([\d.]+))"
+        size = "(full|[\d.]+,|,[\d.]+|pct:[\d.]+|[\d.]+,[\d.]+|![\d.]+,[\d.]+|\^[\d.]+,([\d.]+)?)"
+        rot = "(!)?([0-9.]+)$"
+        quality = "(default|color|gray|bitonal)"
+        format = "(jpg|tif|png|gif|jp2|pdf|eps|bmp)"        
+
+        self.idRe = re.compile(idr)
         self.regionRe = re.compile(region)
         self.sizeRe = re.compile(size)
         self.rotationRe = re.compile(rot)
         self.qualityRe = re.compile(quality)
         self.formatRe = re.compile(format)        
-        self.infoRe = re.compile("/" + id + '/info.(xml|json)')
+        self.infoRe = re.compile("/" + id + '/info.json')
         self.badcharRe= re.compile('[\[\]?@#/]')
+
+    def send(self, data, status=200, ct="text/plain"):
+        response["content_type"] = ct
+        response.status = status
+        return data
+
+    def error(self, status, message=""):
+        self.status = status
+        response['content_type'] = 'text/plain'
+        if message:
+            return message
+        else:    
+            return self.codes[status]
+                        
+    def error_msg(self, param, msg, status):
+        text = "An error occured when processing the '%s' parameter:  %s" % (param, msg)
+        response.status = status
+        response['content_type'] = 'text/plain'
+        return text
         
+    def handle_GET(self, path):
 
-    def make_info(self, identifier, date, edition, sequence):
+        # http://{server}{/prefix}   /{identifier}/{region}/{size}/{rotation}/{quality}{.format}
+        bits = path.split('/')
 
-        tgt = "http://chroniclingamerica.loc.gov/lccn/%s/%s/%s/%s.rdf" % (identifier, date, edition, sequence)
+        if bits:
+            identifier = bits.pop(0)
 
-        try:
-            (imageW, imageH) = INFO_CACHE[tgt]
-        except:
+            if self.idRe.match(identifier) == None:
+                return self.error_msg("identifier", "Identifier invalid: %r" % identifier, status=400)
+            else:
+                # Check []?#@ (will never find / )
+                if self.badcharRe.match(identifier):
+                    return self.error_msg('identifier', 'Unescaped Characters', status=400)                
+                identifier = urllib.unquote(identifier)
+                infoId = urllib.quote(identifier, '')          
+        else:
+            return self.error_msg("identifier", "Identifier unspecified", status=400)
+
+        response['Link'] = '<%s>;rel="profile"' % self.compliance
+        # See: http://mortoray.com/2014/04/09/allowing-unlimited-access-with-cors/
+        response['Access-Control-Allow-Origin'] = request.headers.get('Origin', '*')
+        response['Access-Control-Allow-Credentials'] = 'true'
+
+        # Early cache check here
+        fp = path
+        if fp == identifier or fp == "%s/" % identifier:
+            response.status = 303
+            response['location'] = "%s%s/info.json" % (BASEPREF, infoId)
+            return ""            
+        elif len(fp) > 9 and fp[-9:] == "info.json":
+            # Check request headers for application/ld+json
+            inacc = request.headers.get('Accept', '')
+            if inacc.find('ld+json'):
+                mimetype = "application/ld+json"
+            else:
+                mimetype = "application/json"
+        elif len(fp) > 4 and fp[-4] == '.':
             try:
-                fh = urllib.urlopen(tgt)
-                data = fh.read()
-                fh.close()
-                dom = etree.XML(data)
-                imageW = int(dom.xpath('//exif:width/text()', namespaces={'exif':'http://www.w3.org/2003/12/exif/ns#'})[0])
-                imageH = int(dom.xpath('//exif:height/text()', namespaces={'exif':'http://www.w3.org/2003/12/exif/ns#'})[0])
-                INFO_CACHE[tgt] = (imageW, imageH)
+                mimetype = self.extensions[fp[-3:]]
             except:
-                raise
-                return {}
+                # no such format, early break
+                return self.error_msg('format', 'Unsupported format', status=400)
+                                       
+        if bits:
+            region = bits.pop(0)
+            if self.regionRe.match(region) == None:
+                # test for info.json
+                if region == "info.json":
+                    # build and return info
+                    if inacc.find('ld+json'):
+                        mt = "application/ld+json"
+                    else:
+                        mt = "application/json"
 
+                    info = self.get_info(infoId)
+                    return self.send(info, status=200, ct=mt)
+                else:                
+                    return self.error_msg("region", "Region invalid: %r" % region, status = 400)
+        # else is caught by checking identifier in early cache check
 
-        info = {"@id": "%s/%slccn/%s/%s/%s/%s" % (SERVER, PFX, identifier, date, edition, sequence), 
-                "@context" : "http://library.stanford.edu/iiif/image-api/1.1/context.json",
-                "width":imageW,
-                "height":imageH,
-                "tile_width": TILE_SIZE,
-                "tile_height": TILE_SIZE,
-                "scale_factors": SCALE_FACTORS,
-                "formats": FORMATS,
-                "qualities": QUALITIES}
-        return info
+        if bits:
+            size = bits.pop(0)
+            if self.sizeRe.match(size) == None:
+                return self.error_msg("size", "Size invalid: %r" % size, status = 400)
+        else:
+            return self.error_msg("size", "Size unspecified", status=400)
 
+        if bits:
+            rotation = bits.pop(0)
+            rotation = rotation.replace("%21", '!')
+            m = self.rotationRe.match(rotation) 
+            if m == None:
+                return self.error_msg("rotation", "Rotation invalid: %r" % rotation, status = 400)
+            else:
+                mirror, rotation = m.groups()
+        else:
+            return self.error_msg("rotation", "Rotation unspecified", status=400)
 
-    def do_shim(self, identifier, date, edition, sequence, region, size, rotation, quality, format="jpg"):
-        # /lccn/sn85066387/1907-03-17/ed-1/seq-4/image_813x1024_from_0,0_to_6504,8192.jpg
-        # /lccn/sn85066387/1907-03-17/ed-1/seq-4/image_813x1024.jpg
-        stuff = [identifier, date, edition, sequence, region, size, rotation, quality, format]
-
-        # Will only get called if all bits are present
-        # Otherwise will end at a 404
-
-        if self.regionRe.match(region) == None:               
-            return self.error_msg("region", "Region invalid: %r" % region, status = 400)
-        if self.sizeRe.match(size) == None:
-            return self.error_msg("size", "Size invalid: %r" % size, status = 400)
-        if self.rotationRe.match(rotation) == None:
-            return self.error_msg("rotation", "Rotation invalid: %r" % rotation, status = 400)       
-        if self.qualityRe.match(quality) == None:
-            return self.error_msg("quality", "Quality invalid: %r" % quality, status = 400)
-        elif self.formatRe.match(format) == None:
-            return self.error_msg("format", "Format invalid: %r" % format, status = 400)               
-
-        info = self.make_info(identifier, date, edition, sequence)
-
-        try:
-            imageW = info['width']
-            imageH = info['height']
-        except:
-            return self.error_msg("identifier", "Identifier does not identify an Image", status=404)
-
+        if bits:
+            quality = bits.pop(0)
+            dotidx = quality.rfind('.')
+            if dotidx > -1:
+                format = quality[dotidx+1:]
+                quality = quality[:dotidx]
+            else:
+                return self.error_msg("format", "Format not specified but mandatory", status=400)               
+            if self.qualityRe.match(quality) == None:
+                return self.error_msg("quality", "Quality invalid: %r" % quality, status = 400)
+            elif self.formatRe.match(format) == None:
+                return self.error_msg("format", "Format invalid: %r" % format, status = 400)
+        else:
+            return self.error_msg("quality", "Quality unspecified", status=400)                
+               
+        info = self.get_info(infoId)
+        imageW = info['width']
+        imageH = info['height']
+                    
         # Check region
         if region == 'full':
             # full size of image
@@ -137,7 +206,7 @@ class ChronAmShim(object):
                     x = int(x) ; y = int(y) ; w = int(w) ; h = int(h)
                 except:
                     return self.error_msg('region', 'unable to parse region: %r' % region, status=400) 
-
+                            
             if (x > imageW):
                 return self.error_msg("region", "X coordinate is outside image", status=400)
             elif (y > imageH):
@@ -146,122 +215,259 @@ class ChronAmShim(object):
                 return self.error_msg("region", "Region width is zero", status=400)
             elif h < 1:
                 return self.error_msg("region", "Region height is zero", status=400) 
+            
+            # PIL will create whitespace outside, so constrain
+            # Need this info for next step anyway
             if x+w > imageW:
                 w = imageW-x            
             if y+h > imageH:
                 h = imageH-y            
 
-        # Size of part of image
+        # Output Size
         if size == 'full':
-            sizeW = w
-            sizeH = h
+            sizeW = w ; sizeH = h
         else:
             try:
-                if size[-1] == ',':    # w,
-                    # constrain width to w, and calculate appropriate h
-                    sizeW = int(size[:-1])
-                    scale = int(sizeW/float(w))
-                    sizeH = h * scale     
-                elif size[0] == ',':     # ,h
-                    # constrain height to h, and calculate appropriate w
-                    sizeH = int(size[1:])
-                    scale = int(sizeH/float(h))
-                    sizeW = w * scale;
-                elif size[0] == '!':     # !w,h
+                if size[0] == '!':     # !w,h
                     # Must fit inside w and h
                     (maxSizeW, maxSizeH) = size[1:].split(',')
                     # calculate both ratios and pick smaller
+                    if not maxSizeH:
+                        maxSizeH = maxSizeW
                     ratioW = float(maxSizeW) / w
                     ratioH = float(maxSizeH) / h
-                    scale = int(min(ratioW, ratioH))
-                    sizeW = w * scale
-                    sizeH = h * scale       
+                    ratio = min(ratioW, ratioH)
+                    sizeW = int(w * ratio)
+                    sizeH = int(h * ratio)        
+                elif size[0] == '^':  # ^w,[h]
+
+                    # EXPERIMENTAL 2.1 FEATURE
+
+                    sizeW, sizeH = size[1:].split(',')
+                    if not sizeH:
+                        sizeH = sizeW
+                    sizeW = float(sizeW)
+                    sizeH = float(sizeH)
+                    rw = w / sizeW
+                    rh = h / sizeH
+                    multiplier = min(rw, rh)
+                    minSizeW = sizeW * multiplier
+                    minSizeH = sizeH * multiplier                    
+
+                    x = int(((w-minSizeW)/2)+x)
+                    y = int(((h-minSizeH)/2)+y)
+                    w = int(minSizeW)
+                    h = int(minSizeH)
+                    sizeW = int(sizeW)
+                    sizeH = int(sizeH)
+                    ratio = 1
+                elif size[-1] == ',':    # w,
+                    # constrain width to w, and calculate appropriate h
+                    sizeW = int(size[:-1])
+                    ratio = sizeW/float(w)
+                    sizeH = int(h * ratio)      
+                elif size[0] == ',':     # ,h
+                    # constrain height to h, and calculate appropriate w
+                    sizeH = int(size[1:])
+                    ratio = sizeH/float(h)
+                    sizeW = int(w * ratio)
+
                 elif size.startswith('pct:'):     #pct: n
                     # n percent of size
-                    scale = float(size[4:])/100.0
-                    sizeW = w * scale
-                    sizeH = h * scale                     
+                    ratio = float(size[4:])/100
+                    sizeW = int(w * ratio)
+                    sizeH = int(h * ratio)                         
+                    if sizeW < 1:
+                        sizeW = 1
+                    if sizeH < 1:
+                        sizeH = 1
                 else:    # w,h    or invalid
                     (sw,sh) = size.split(',')
-                    # exactly w and h, deforming aspect
-                    return self.error_msg('size', 'arbitrary w,h is not supported by ChronAm')              
+                    # exactly w and h, deforming aspect (if necessary)
+                    sizeW = int(sw)
+                    sizeH = int(sh)  
+                    # Nasty hack to get the right canonical URI
+                    ratioW = sizeW/float(w)
+                    tempSizeH = int(sizeH / ratioW)
+                    if tempSizeH in [h, h-1, h+1]:
+                        ratio = 1
+                    else:
+                        ratio = 0
             except:
                 return self.error_msg('size', 'Size unparseable: %r' % size, status=400)      
-        
-            sizeW = int(sizeW)
-            sizeH = int(sizeH)
 
         # Process rotation
         try:
-            rotation = float(rotation)
+            if '.' in rotation:
+                rot = float(rotation)
+                if rot == int(rot):
+                    rot = int(rot)
+            else:
+                rot = int(rotation)
         except:
             return self.error_msg('rotation', 'Rotation unparseable: %r' % rotation, status=400)
-        if rotation < 0 or rotation > 360:
+        if rot < 0 or rot > 360:
             return self.error_msg('rotation', 'Rotation must be 0-359.99: %r' % rotation, status=400)            
-        if rotation != 0.0:
-            return self.error_msg('rotation', 'Rotation is not supported', status=501)
-        if not quality in info['qualities']:
-            return self.error_msg('quality', 'Quality not supported for this image: %r' % quality, status=501)            
+        # 360 --> 0
+        rot = rot % 360
 
-        # Now construct image URL and redirect to it
+        quals = info['profile'][1]['qualities']
+        quals.extend(["default","bitonal"])
+        if not quality in quals:
+            return self.error_msg('quality', 'Quality not supported for this image: %r not in %r' % (quality, quals), status=501)
+        if quality == quals[0]:
+            quality = "default"
+        
+        nformat = format.upper()
+        if nformat == 'JPG':
+            nformat = 'JPEG'
+        elif nformat == "TIF":
+            nformat = "TIFF"
+        try:
+            mimetype = self.formats[nformat]
+        except:
+            return self.error_msg('format', 'Unsupported format', status=415)
 
-        target = "http://chroniclingamerica.loc.gov/lccn/%s/%s/%s/%s/image_%sx%s_from_%s,%s_to_%s,%s.jpg" % (
-            identifier, date, edition, sequence, sizeW, sizeH, x,y, x+w, y+h)
+        # Check if URI is not canonical, if so redirect to canonical URI
+        if x == 0 and y == 0 and w == imageW and h == imageH:
+            c_region = "full"
+        else:
+            c_region = "%s,%s,%s,%s" % (x,y,w,h)
 
-        response.headers['Location'] = target
-        response.status = 302
-        return ""
+        if (sizeW == imageW and sizeH == imageH) or (w == sizeW and h == sizeH):
+            c_size = "full"
+        elif ratio:
+            c_size = "%s," % (sizeW)
+        else:
+            c_size = "%s,%s" % (sizeW, sizeH)
+
+        c_rot = "!%s" % rot if mirror else str(rot) 
+        c_qual = "%s.%s" % (quality, format.lower())
+        paths = [infoId, c_region, c_size, c_rot, c_qual]
+        fn = os.path.join(*paths)
+        new_url = BASEPREF + fn
+        response['Link'] += ', <%s>;rel="canonical"' % new_url
+
+        if fn != path:
+            response['Location'] = new_url
+            return self.send("", status=301)
+
+        # generate new URL here
+        url = self.make_url(infoId,x,y,w,h,imageW,imageH,sizeW,sizeH,rot,mirror,quality,format)
+        response['Location'] = url
+
+        return self.send("", status=302)
 
 
-    def do_info(self, identifier, date, edition, sequence):
-        response["content_type"] = "application/json"        
-        js = self.make_info(identifier, date, edition, sequence)
-        out = json.dumps(js, sort_keys=True, indent=2)
-        return out
+    def get_info(self, infoId):
+
+        # Each cache check
+        info = self.cache.get(infoId, {})
+        if info:
+            return info
+
+        # Need at least image H and W
+
+        info = {                
+                "@id": "%s%s" % (BASEPREF, infoId),
+                "@context" : self.context,
+                "protocol" : self.protocol}
+
+        info2 = self.build_info(infoId)
+        info.update(info2)
+
+
+        # broad defaults
+
+
+        if not info.has_key('sizes'):
+            sizes = []
+            for scale in SCALE_FACTORS:
+                sizes.append({'width': imageW / scale, 'height': imageH / scale })
+            sizes.reverse()
+            info['sizes'] = sizes
+        if not info.has_key('tiles'):
+            info['tiles'] = [{'width':TILE_SIZE, 'scaleFactors': SCALE_FACTORS}]
+        if not info.has_key('profile'):
+            info['profile'] = [self.compliance]
+
+        return info
+
+    def build_info(self, infoId):
+        # Do translation here
+        # Translate ~s to /s in the identifier
+        infoId = infoId.replace('~', '/')
+        infoId = infoId.replace("%7E", '/')
+        tgt = "http://chroniclingamerica.loc.gov/lccn/%s.rdf" % (infoId)
+
+        try:
+            (imageW, imageH) = INFO_CACHE[tgt]
+        except:
+            try:
+                fh = urllib.urlopen(tgt)
+                data = fh.read()
+                fh.close()
+                dom = etree.XML(data)
+                imageW = int(dom.xpath('//exif:width/text()', namespaces={'exif':'http://www.w3.org/2003/12/exif/ns#'})[0])
+                imageH = int(dom.xpath('//exif:height/text()', namespaces={'exif':'http://www.w3.org/2003/12/exif/ns#'})[0])
+                INFO_CACHE[tgt] = (imageW, imageH)
+            except:
+                raise
+                return {}
+        info = {
+                "width":imageW,
+                "height":imageH       
+                }
+        return info
+
+    def make_url(self,identifier,x,y,w,h,imageW,imageH,sizeW,sizeH,rot,mirror,quality,format):
+        # Do mapping from parsed data to external image URL here
+        identifier = identifier.replace('~', '/')
+        url = "http://chroniclingamerica.loc.gov/lccn/%s/image_%sx%s_from_%s,%s_to_%s,%s.jpg" % (
+            identifier, sizeW, sizeH, x,y, x+w, y+h)
+        return url
+
 
     def dispatch_views(self):
-        self.app.route("/%slccn/<identifier>/<date>/<edition>/<sequence>/info.json" % PFX, "GET", self.do_info)
-        self.app.route("/%slccn/<identifier>/<date>/<edition>/<sequence>/<region>/<size>/<rotation>/<quality>.<format>" % PFX, "GET", self.do_shim)
-        self.app.route("/%slccn/<identifier>/<date>/<edition>/<sequence>/<region>/<size>/<rotation>/<quality>" % PFX, "GET", self.do_shim)
+        # Send everything to the one function
+        self.app.route('/<path:re:.*>', ["get"], getattr(self, "handle_GET", self.not_implemented))
 
+    def not_implemented(self, *args, **kwargs):
+        """Returns not implemented status."""
+        abort(501)
 
-    def after_request(self):
-        """A bottle hook to add CORS headers"""
-        methods = 'GET'
-        headers = 'Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token'
-        response.headers['Access-Control-Allow-Origin'] = '*'
-        response.headers['Access-Control-Allow-Methods'] = methods
-        response.headers['Access-Control-Allow-Headers'] = headers
-        response.headers['Allow'] = methods
+    def empty_response(self, *args, **kwargs):
+        """Empty response"""
 
-
-    def error_msg(self, param, msg, status):
-        abort(status, "Error with %s: %s" % (param, msg))
+    def error(self, error, message=None):
+        """Returns the error response."""
+        return json.dumps({"error": error.status_code,
+                        "message": error.body or message}, "")
 
     def get_bottle_app(self):
         """Returns bottle instance"""
         self.app = Bottle()
         self.dispatch_views()
-        self.app.hook('after_request')(self.after_request)
         return self.app
 
-
     def run(self, *args, **kwargs):
-        """Shortcut method for running kule"""
+        """Shortcut method"""
         kwargs.setdefault("app", self.get_bottle_app())
         run(*args, **kwargs)
 
-
 def apache():
-    # Apache takes care of the prefix
-    PFX = ""
-    v = ChronAmShim();
-    return v.get_bottle_app()
+    app = ImageApp();
+    return app.get_bottle_app()
+
 
 def main():
-    mr = ChronAmShim()
-    run(host='localhost', port=8080, app=mr.get_bottle_app())
+    host = "localhost"
+    port = 8000
+    imgapp = ImageApp()
+    app=imgapp.get_bottle_app()
 
+    bottle.debug(True)
+    run(host=host, port=port, app=app)
 
 if __name__ == "__main__":
     main()
