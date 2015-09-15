@@ -254,7 +254,7 @@ class ImageAPI(object):
     def fetch(self, url):
         # print url
         try:
-            wh = urllib2.urlopen(url)
+            wh = urllib2.urlopen(url, timeout=5)
         except urllib2.HTTPError, e:
             wh = e
         except:
