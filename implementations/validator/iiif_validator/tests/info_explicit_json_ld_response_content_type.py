@@ -1,7 +1,7 @@
 # encoding: utf-8
 
-from test import BaseTest
 import urllib2
+from test import BaseTest
 
 
 class Test_Info_Explicit_Json_Ld_Response_Content_Type(BaseTest):
@@ -26,19 +26,8 @@ class Test_Info_Explicit_Json_Ld_Response_Content_Type(BaseTest):
 
         # http://iiif.io/api/image/2.1/index.html#information-request
         #
-        # If the client explicitly wants the JSON-LD content-type, then it MUST specify this in an Accept
-        # header, otherwise the server MUST return the regular JSON content-type.
-        #
-        # If the regular JSON content-type is returned, then it is RECOMMENDED that the server provide a link
-        # header to the context document.
-
-        if ct == 'application/json':
-            expected_link_header = '<http://iiif.io/api/image/2/context.json>'
-            link_header = wh.headers.get('link')
-
-            if not link_header.startswith(expected_link_header):
-                raise ValidatorError('json-ld-with-context-link', link_header, expected_link_header, result)
-        else:
-            self.validationInfo.check('json-ld', ct, 'application/ld+json', result)
+        # See https://github.com/IIIF/image-api/pull/27 for clarification that only
+        # application/ld+json is acceptable when the request explicitly accepts it:
+        self.validationInfo.check('json-ld', ct, 'application/ld+json', result)
 
         return result
