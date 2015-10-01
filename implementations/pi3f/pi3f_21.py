@@ -637,6 +637,10 @@ class ImageApp(object):
             nquality = {'color':'RGB','gray':'L','bitonal':'1'}[quality]
             image = image.convert(nquality)
 
+        # Can't save alpha mode in jpeg
+        if nformat == 'JPEG' and image.mode == 'P':
+            image = image.convert('RGB')
+
         output = StringIO.StringIO()
         try:
             image.save(output,format=nformat, quality=self.jpegQuality)
