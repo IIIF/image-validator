@@ -2,6 +2,7 @@
 from imageFile import ImageFile
 import re
 import urllib
+from bottle import abort
 
 class ImageRequest(object):
     identifier = None
