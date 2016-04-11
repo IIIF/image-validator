@@ -25,7 +25,6 @@ class AuthHandler(object):
         if not token.startswith("Bearer "):
             return False
         tok = token[7:]
-
         # FIXME Implement tokens!
         return True
 
@@ -38,9 +37,9 @@ class AuthHandler(object):
     def get_iiif_token(self):
         # This is the next step -- client requests a token to send to info.json
         # We're going to just copy it from our cookie.
-        # JSONP request to get the token to send to info.json in Auth'z header
+        # postMessage request to get the token to send to info.json in Auth'z header
         cf = self.config
-        callbackFn = request.query.get('callback', '')
+        callback = request.query.get('browser', '')
         authcode = request.query.get('code', '')
         account = ''
         try:
@@ -56,8 +55,12 @@ class AuthHandler(object):
             response.set_cookie(cf.COOKIE_NAME, account, secret=cf.COOKIE_SECRET)
         dataStr = json.dumps(data)
 
-        if callbackFn:
-            return self.application.send("{0}({1});".format(callbackFn, dataStr), ct="application/javascript")
+        if callback:
+            html = """<html><body><script>
+window.opener.postMessage({0}, '*');    
+window.close();
+</script></body></html>""".format(dataStr)
+            return self.application.send(html, ct="text/html")
         else:
             return self.application.send(dataStr, ct="application/json")
 
@@ -90,7 +93,7 @@ class NullAuthHandler(AuthHandler):
         return True
 
 class BasicAuthHandler(AuthHandler):
-    def check_basic_auth(self, user, password):
+    def check_basic_auth(user, password):
         # Re-implement me to do actual user/password checking
         return user == password
 
@@ -98,7 +101,7 @@ class BasicAuthHandler(AuthHandler):
     def login(self):
         cf = self.config
         auth = request.headers.get('Authorization')
-        email,p = parse_auth(auth)        
+        email,p = parse_auth(auth)      
         response.set_cookie(cf.COOKIE_NAME_ACCOUNT, email, secret=cf.COOKIE_SECRET)
         return self.application.send("<html><script>window.close();</script></html>", ct="text/html");
 

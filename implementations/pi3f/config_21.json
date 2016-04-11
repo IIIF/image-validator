@@ -18,6 +18,10 @@
 
     "TILE_SIZE": 512,
     "MIN_SIZE": 50,
+    "MAX_HEIGHT": 0,
+    "MAX_WIDTH": 0,
+    "MAX_AREA": 0,
+
     "USE_LD_JSON": 1,
     "ATTRIBUTION": "Provided by Example Organization",
     "LICENSE": "http://license.example.com/license",
@@ -27,15 +31,14 @@
     "context": "http://iiif.io/api/image/2/context.json",
     "protocol": "http://iiif.io/api/image",
 
-    "DEGRADE_IMAGES": 0, 
+    "DEGRADE_IMAGES": 1, 
     "DEGRADED_NOACCESS": 0,
     "DEGRADED_SIZE": 400,
-    "DEGRADED_QUALITY": "",
-    "DEGRADED_QUALITY": "gray",
-    "AUTH_TYPE": "",
+    "DEGRADED_QUALITY": "bitonal",
+    "AUTH_TYPE": "basic",
     "COOKIE_NAME": "loggedin",
     "COOKIE_NAME_ACCOUNT": "account",
-    "COOKIE_SECRET": "abc-123-*&^",
+    "COOKIE_SECRET": "abc-123-xyz",
     "DEGRADED_IDENTIFIER": "-degraded",
 
     "AUTH_URL_LOGIN": "login",

@@ -81,12 +81,12 @@ class ValidationInfo(object):
         val = val.replace('/', '$')
         return val
 
-    def check(self, typ, got, expected, result=None):
+    def check(self, typ, got, expected, result=None, errmsg=""):
         if type(expected) == list:
             if not got in expected:
-                raise ValidatorError(typ, got, expected, result)
+                raise ValidatorError(typ, got, expected, result, errmsg)
         elif got != expected:
-            raise ValidatorError(typ, got, expected, result)
+            raise ValidatorError(typ, got, expected, result, errmsg)
         if result:
             result.tests.append(typ)
         return 1
@@ -252,9 +252,15 @@ class ImageAPI(object):
         return None
 
     def fetch(self, url):
-        # print url
+        
+        # Make it look like a real browser request
+        HEADERS = {"Origin": "http://iiif.io/", 
+            "Referer": "http://iiif.io/api/image/validator",
+            "User-Agent": "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.1b3pre) Gecko/20081130 Minefield/3.1b3pre"}
+        req = urllib2.Request(url, headers=HEADERS)
+
         try:
-            wh = urllib2.urlopen(url, timeout=5)
+            wh = urllib2.urlopen(req, timeout=5)
         except urllib2.HTTPError, e:
             wh = e
         except:

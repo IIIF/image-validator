@@ -28,7 +28,7 @@ class FileSystemResolver(Resolver):
             self.identifiers[f] = fn
 
     def resolve_identifier(self, identifier):
-        idv = identifier.value
+        idv = identifier.baseValue
         if self.identifiers.has_key(idv):
             return self.identifiers[idv]
         else:

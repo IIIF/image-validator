@@ -2,6 +2,7 @@
 from imageFile import ImageFile
 import re
 import urllib
+from bottle import abort
 
 class ImageRequest(object):
     identifier = None
@@ -101,13 +102,13 @@ class IdentifierParam(ImageParam):
         value = urllib.unquote(value)
         ImageParam.__init__(self, value, req)
         cf = self.imageRequest.application.config
-
         if value.endswith(cf.DEGRADED_IDENTIFIER):
             self.baseValue = value.replace(cf.DEGRADED_IDENTIFIER, '')
             self.degraded = True
         else:
             self.baseValue = value
         self.infoValue = urllib.quote(value, '')
+
 
 class RegionParam(ImageParam):
     valueRe = re.compile("^(full|square|(pct:)?([\d.]+,){3}([\d.]+))$")
@@ -265,6 +266,14 @@ class SizeParam(ImageParam):
                         ratio = 0
             except:
                 abort(400, self.make_error_message())
+        cf = self.imageRequest.application.config
+        if cf.MAX_HEIGHT and sizeH > cf.MAX_HEIGHT:
+            abort(400, "Requested image height is greater than maximum allowed")
+        elif cf.MAX_WIDTH and sizeW > cf.MAX_WIDTH:
+            abort(400, "Requested image width is greater than maximum allowed")
+        elif cf.MAX_AREA and (sizeW * sizeH) > cf.MAX_AREA:
+            abort(400, "Requested image size is greater than maximum number of pixels allowed")
+
         self.height = sizeH
         self.width = sizeW
         self.ratio = ratio              

@@ -12,7 +12,7 @@ import hashlib
 
 from cacher import FileSystemCacher
 from resolver import FileSystemResolver
-from authHandler import OAuthHandler, NullAuthHandler
+from authHandler import OAuthHandler, NullAuthHandler, BasicAuthHandler
 from imageRequest import ImageRequest
 
 class Config(object):
@@ -53,6 +53,11 @@ class Config(object):
             self.content_types[v] = k
 
         self.jpegQuality = 90            
+
+        # ... Can't pass unicode to cookies :(
+        self.COOKIE_NAME = str(self.COOKIE_NAME)
+        self.COOKIE_NAME_ACCOUNT = str(self.COOKIE_NAME_ACCOUNT)
+        self.COOKIE_SECRET = str(self.COOKIE_SECRET)
 
         # Other possibilities:
         # cf.DEGRADED_QUALITY = "gray"
@@ -115,14 +120,14 @@ class ImageApp(object):
             redirect("{0}{1}/info.json".format(cf.BASEPREF, identifier.requested), 303)
 
         isInfoRequest = bits[-1] == "info.json"
-        if not isAuthed and not identifier.endswith(cf.DEGRADED_IDENTIFIER):
+        if not isAuthed and not identifier.degraded:
             if isInfoRequest:
                 if cf.DEGRADED_NOACCESS:
                     # No access is special degraded
                     redirect('{0}{1}/info.json'.format(cf.BASEPREF, cf.AUTH_URL_NOACCESS_ID))
                 else:
                     # Or redirect to degraded  
-                    redirect('{0}{1}{2}/info.json'.format(cf.BASEPREF, identifier, cf.DEGRADED_IDENTIFIER))
+                    redirect('{0}{1}{2}/info.json'.format(cf.BASEPREF, identifier.value, cf.DEGRADED_IDENTIFIER))
             else:
                 # Block access to images
                 abort(401, identifier.make_error_message("Not Authenticated"))
