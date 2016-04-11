@@ -56,7 +56,10 @@ class AuthHandler(object):
         dataStr = json.dumps(data)
 
         if callback:
-            html = "<html><body><script>window.opener.postMessage({0}, '*'); window.close();</script></body></html>".format(dataStr)
+            html = """<html><body><script>
+window.opener.postMessage({0}, '*');    
+window.close();
+</script></body></html>""".format(dataStr)
             return self.application.send(html, ct="text/html")
         else:
             return self.application.send(dataStr, ct="application/json")
@@ -99,7 +102,6 @@ class BasicAuthHandler(AuthHandler):
         cf = self.config
         auth = request.headers.get('Authorization')
         email,p = parse_auth(auth)      
-        # Can't pass unicode from JSON to set_cookie :(
         response.set_cookie(cf.COOKIE_NAME_ACCOUNT, email, secret=cf.COOKIE_SECRET)
         return self.application.send("<html><script>window.close();</script></html>", ct="text/html");
 
