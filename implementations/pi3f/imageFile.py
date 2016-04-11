@@ -23,6 +23,9 @@ class ImageFile(object):
         self.qualities = []
         self.formats = []
 
+        self.degradedWidth = -1
+        self.degradedHeight = -1
+
     def open(self):
         if self.image != None:
             return self.image
@@ -45,10 +48,18 @@ class ImageFile(object):
         image = self.open()
         cf = self.config
 
-        if self.identifier.value.endswith(cf.DEGRADED_IDENTIFIER):
+        if self.identifier.degraded:
             if cf.DEGRADED_SIZE > 0:
                 # resize max size
-                image = image.resize(self.degradedWidth, self.degradedHeight)
+                if self.width > self.height:
+                    ratio = float(cf.DEGRADED_SIZE) / self.width
+                    imageH = int(self.height * ratio)
+                    imageW = cf.DEGRADED_SIZE
+                else:
+                    ratio = float(cf.DEGRADED_SIZE) / self.height
+                    imageW = int(self.width * ratio)
+                    imageH = cf.DEGRADED_SIZE
+                image = image.resize((imageW, imageH))
             if cf.DEGRADED_QUALITY:
                 nquality = {'gray':'L','bitonal':'1'}[cf.DEGRADED_QUALITY]
                 image = image.convert(nquality)                
@@ -131,8 +142,8 @@ class ImageFile(object):
         (imageW, imageH) = (self.width, self.height)
 
         cf = self.config
-        if cf.DEGRADE_IMAGES and self.identifier.value.endswith(cf.DEGRADED_IDENTIFIER) and cf.DEGRADED_SIZE:
-            # Make max 400 on long edge and add in auth service
+        if cf.DEGRADE_IMAGES and self.identifier.degraded and cf.DEGRADED_SIZE:
+            # Make SIZE on long edge
             if imageW > imageH:
                 ratio = float(cf.DEGRADED_SIZE) / imageW
                 imageH = int(imageH * ratio)
@@ -141,9 +152,6 @@ class ImageFile(object):
                 ratio = float(cf.DEGRADED_SIZE) / imageH
                 imageW = int(imageW * ratio)
                 imageH = cf.DEGRADED_SIZE
-
-            self.degradedWidth = imageW
-            self.degradedHeight = imageH
 
         all_scales = []
         sfn = 0
@@ -169,8 +177,8 @@ class ImageFile(object):
                 "@id": "{0}{1}".format(cf.BASEPREF, self.identifier.value),
                 "@context" : cf.context,
                 "protocol" : cf.protocol,
-                "width":imageW,
-                "height":imageH,
+                "width": imageW,
+                "height": imageH,
                 "tiles" : [{'width':cf.TILE_SIZE, 'scaleFactors': all_scales}],
                 "sizes" : sizes,
                 "profile": [cf.compliance,

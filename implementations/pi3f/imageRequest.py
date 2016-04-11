@@ -102,13 +102,13 @@ class IdentifierParam(ImageParam):
         value = urllib.unquote(value)
         ImageParam.__init__(self, value, req)
         cf = self.imageRequest.application.config
-
         if value.endswith(cf.DEGRADED_IDENTIFIER):
             self.baseValue = value.replace(cf.DEGRADED_IDENTIFIER, '')
             self.degraded = True
         else:
             self.baseValue = value
         self.infoValue = urllib.quote(value, '')
+
 
 class RegionParam(ImageParam):
     valueRe = re.compile("^(full|square|(pct:)?([\d.]+,){3}([\d.]+))$")
