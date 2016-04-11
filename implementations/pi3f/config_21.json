@@ -18,6 +18,10 @@
 
     "TILE_SIZE": 512,
     "MIN_SIZE": 50,
+    "MAX_HEIGHT": 0,
+    "MAX_WIDTH": 0,
+    "MAX_AREA": 0,
+
     "USE_LD_JSON": 1,
     "ATTRIBUTION": "Provided by Example Organization",
     "LICENSE": "http://license.example.com/license",

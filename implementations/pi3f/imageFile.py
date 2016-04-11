@@ -189,6 +189,13 @@ class ImageFile(object):
         if cf.LICENSE:
             info['license'] = cf.LICENSE
 
+        if cf.MAX_WIDTH:
+            info['profile'][1]['maxWidth'] = cf.MAX_WIDTH
+        if cf.MAX_HEIGHT and cf.MAX_HEIGHT != cf.MAX_WIDTH:
+            info['profile'][1]['maxHeight'] = cf.MAX_HEIGHT
+        if cf.MAX_AREA:
+            info['profile'][1]['maxArea'] = cf.MAX_AREA
+
         if cf.AUTH_TYPE:
             info['service'] = {'@context': 'http://iiif.io/api/auth/0/context.json', 
                 '@id': cf.BASEPREF + cf.AUTH_URL_LOGIN, 
