@@ -1,4 +1,4 @@
-from test import BaseTest, ValidatorError
+from .test import BaseTest, ValidatorError
 import random
 
 class Test_Id_Squares(BaseTest):

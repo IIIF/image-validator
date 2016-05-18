@@ -1,4 +1,4 @@
-from test import BaseTest, ValidatorError
+from .test import BaseTest, ValidatorError
 
 
 class Test_Rot_Mirror(BaseTest):

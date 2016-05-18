@@ -1,4 +1,4 @@
-from test import BaseTest
+from .test import BaseTest
 
 class Test_Id_Basic(BaseTest):
     label = 'Image is returned'

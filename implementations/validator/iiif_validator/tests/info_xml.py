@@ -1,4 +1,4 @@
-from test import BaseTest, ValidatorError
+from .test import BaseTest, ValidatorError
 from lxml import etree
 
 class Test_Info_Xml(BaseTest):

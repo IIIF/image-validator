@@ -1,4 +1,4 @@
-from test import BaseTest
+from .test import BaseTest
 
 class Test_Size_Error_Random(BaseTest):
     label = 'Random size gives 400'

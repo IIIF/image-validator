@@ -1,5 +1,10 @@
-from test import BaseTest
-import urllib2
+from .test import BaseTest
+try:
+    # python3
+    from urllib.request import Request, urlopen, HTTPError
+except ImportError:
+    # fall back to python2
+    from urllib2 import Request, urlopen, HTTPError
 
 class Test_Format_Conneg(BaseTest):
     label = 'Negotiated format'
@@ -12,15 +17,18 @@ class Test_Format_Conneg(BaseTest):
         url = result.make_url(params={})
         hdrs = {'Accept': 'image/png;q=1.0'}
         try:
-            r = urllib2.Request(url, headers=hdrs)
-            wh = urllib2.urlopen(r)
+            r = Request(url, headers=hdrs)
+            wh = urlopen(r)
             img = wh.read()   
             wh.close()
-        except urllib2.HTTPError, e:
+        except HTTPError as e:
             wh = e
         ct = wh.headers['content-type']
         result.last_url = url
-        result.last_headers = wh.headers.dict
+        try:  # py2
+            result.last_headers = wh.headers.dict
+        except:
+            result.last_headers = wh.info()
         result.last_status = wh.code
         result.urls.append(url)
         self.validationInfo.check('format', ct, 'image/png', result)

@@ -1,3 +1,4 @@
+"""BaseTest class for tests and ValidationError exception."""
 
 class BaseTest(object):
     label = "test name"
@@ -11,8 +12,8 @@ class BaseTest(object):
 
     @classmethod
     def make_info(cls, version):
-    	if version and not version in cls.versions:
-			return {}            
+        if version and not version in cls.versions:
+            return {}            
         data = {'label': cls.label, 'level':cls.level, 'versions': cls.versions, 'category': cls.category}
         if type(cls.level) == dict:
             # If not version, need to make a choice... make it max()

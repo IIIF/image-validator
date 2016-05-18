@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-"""
-Run validator code from command line
+"""Run validator code from command line.
 
 Wrapper around validator.py for use in local manual and continuous 
 integration tests of IIIF servers. Command line options specify
