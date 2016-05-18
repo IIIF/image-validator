@@ -14,10 +14,10 @@ except ImportError:  # python3
     import io
 try:
     # python3
-    from urllib.request import urlopen, HTTPError
+    from urllib.request import urlopen, Request, HTTPError
 except ImportError:
     # fall back to python2
-    from urllib2 import urlopen, HTTPError
+    from urllib2 import urlopen, Request, HTTPError
 try:
     from PIL import Image, ImageDraw
 except:
@@ -82,12 +82,12 @@ class ValidationInfo(object):
         val = val.replace('/', '$')
         return val
 
-    def check(self, typ, got, expected, result=None):
+    def check(self, typ, got, expected, result=None, errmsg=""):
         if type(expected) == list:
             if not got in expected:
-                raise ValidatorError(typ, got, expected, result)
+                raise ValidatorError(typ, got, expected, result, errmsg)
         elif got != expected:
-            raise ValidatorError(typ, got, expected, result)
+            raise ValidatorError(typ, got, expected, result, errmsg)
         if result:
             result.tests.append(typ)
         return 1
@@ -255,8 +255,14 @@ class ImageAPI(object):
         return None
 
     def fetch(self, url):
+        # Make it look like a real browser request
+        HEADERS = {"Origin": "http://iiif.io/", 
+            "Referer": "http://iiif.io/api/image/validator",
+            "User-Agent": "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.1b3pre) Gecko/20081130 Minefield/3.1b3pre"}
+        req = Request(url, headers=HEADERS)
+
         try:
-            wh = urlopen(url)
+            wh = urlopen(req, timeout=5)
         except HTTPError as e:
             wh = e
         except:

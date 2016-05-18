@@ -1,0 +1,56 @@
+{
+    "HOMEDIR": "/home/user",
+    "FILEDIRS": ["path/to/images/"],
+    "IMAGEFMTS": ["png", "jpg", "tif"],
+    "CACHEDIR": "path/to/cache/",
+
+    "ENABLE_DEBUG_LIST": 1,
+
+    "UPLOADDIR": "path/to/submitted/",
+    "UPLOADLINKDIR":  "urls/",
+    "MAXUPLOADFILES": 1000,
+    "SUBMIT_URL": "submit",
+
+    "SLASH_REPLACE_CHAR": "~~",
+
+    "BASEURL": "http://example.com/",
+    "PREFIX": "prefix",
+
+    "TILE_SIZE": 512,
+    "MIN_SIZE": 50,
+    "USE_LD_JSON": 1,
+    "ATTRIBUTION": "Provided by Example Organization",
+    "LICENSE": "http://license.example.com/license",
+    "LOGO": "http://example.com/images/logo.jpg",
+
+    "compliance": "http://iiif.io/api/image/2/level2.json",
+    "context": "http://iiif.io/api/image/2/context.json",
+    "protocol": "http://iiif.io/api/image",
+
+    "DEGRADE_IMAGES": 0, 
+    "DEGRADED_NOACCESS": 0,
+    "DEGRADED_SIZE": 400,
+    "DEGRADED_QUALITY": "",
+    "DEGRADED_QUALITY": "gray",
+    "AUTH_TYPE": "",
+    "COOKIE_NAME": "loggedin",
+    "COOKIE_NAME_ACCOUNT": "account",
+    "COOKIE_SECRET": "abc-123-*&^",
+    "DEGRADED_IDENTIFIER": "-degraded",
+
+    "AUTH_URL_LOGIN": "login",
+    "AUTH_URL_LOGOUT": "logout",
+    "AUTH_URL_TOKEN": "token",
+    "AUTH_URL_HOME": "home",
+    "AUTH_URL_CLIENTCODE": "code",
+    "AUTH_URL_NOACCESS_ID": "no-access",
+
+    "CLIENT_SECRETS": {},
+
+    "GOOGLE_API_CLIENT_ID": "client_id",
+    "GOOGLE_API_CLIENT_SECRET": "client_secret",
+    "GOOGLE_API_SCOPE": "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email",
+    "GOOGLE_OAUTH2_URL": "https://accounts.google.com/o/oauth2/",
+    "GOOGLE_API_URL": "https://www.googleapis.com/oauth2/v1/"
+
+}

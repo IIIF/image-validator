@@ -24,5 +24,5 @@ class Test_Jsonld(BaseTest):
         except HTTPError as e:
             wh = e
         ct = wh.headers['content-type']
-        self.validationInfo.check('json-ld', ct, 'application/ld+json', result)
+        self.validationInfo.check('json-ld', ct.startswith('application/ld+json'), 1, result, "Content-Type to start with application/ld+json")
         return result

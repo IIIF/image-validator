@@ -23,11 +23,15 @@ class BaseTest(object):
                 data['level'] = max(cls.level.values())
         return data
 
+
+# this looks like it needs refactoring, along with validationInfo.check()
 class ValidatorError(Exception):
-    def __init__(self, type, got, expected, result=None):
+    def __init__(self, type, got, expected, result=None, message="", isWarning=False):
         self.type = type
         self.got = got
         self.expected = expected
+        self.message = message
+        self.warning = isWarning
         if result != None:
             self.url = result.last_url
             self.headers = result.last_headers
@@ -38,7 +42,10 @@ class ValidatorError(Exception):
             self.status = None
                 
     def __str__(self):
-        return "Expected %r for %s; Got: %r" % (self.expected, self.type, self.got)
+        if self.message:
+            return "Expected %s for %s; Got: %r".format(self.message, self.type, self.got)
+        else:
+            return "Expected %r for %s; Got: %r".format(self.expected, self.type, self.got)
 
 
 

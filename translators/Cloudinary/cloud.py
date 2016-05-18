@@ -156,13 +156,13 @@ class ServiceHandler(WsgiApp):
                    'png' : 'image/png', 
                    'tif' : 'image/tiff'}
 
-        self.compliance = "http://library.stanford.edu/iiif/image-api/1.1/compliance.html#level2"
+        self.compliance = "http://iiif.io/api/image/2/level2.json"
         
         id = "([^/#?@]+)"
         region = "(full|(pct:)?([\d.]+,){3}([\d.]+))"
         size = "(full|[\d.]+,|,[\d.]+|pct:[\d.]+|[\d.]+,[\d.]+|![\d.]+,[\d.]+)"
         rot = "([0-9.+])"
-        quality = "(native|color|grey|bitonal)"
+        quality = "(default|color|gray|bitonal)"
         format = "(jpg|tif|png|gif|jp2|pdf|eps|bmp)"        
         #ire = '/' + '/'.join([id,region,size,rot,quality]) + "(." + format + ")?"
         self.idRe = re.compile(id)
@@ -199,12 +199,13 @@ class ServiceHandler(WsgiApp):
             imageH = external['height']
             INFO_CACHE[identifier] = (imageW, imageH)
 
-        qualities = ['native','color','grey','bitonal']            
+        qualities = ['default','color','gray','bitonal']
         
         formats = self.extensions.keys()
 
         info = {"@id": "%s%s/%s" % (BASEURL, PREFIX, identifier),
-                "@context" : "http://library.stanford.edu/iiif/image-api/1.1/context.json",
+                "@context" : "http://iiif.io/api/image/2/context.json",
+                "protocol": "http://iiif.io/api/image",
                 "width":imageW,
                 "height":imageH,
                 "tile_width": TILE_SIZE,
@@ -212,7 +213,7 @@ class ServiceHandler(WsgiApp):
                 "scale_factors": [1,2,3,4,5,8,10,16],
                 "formats": formats,
                 "qualities": qualities,
-                "profile": self.compliance}
+                "profile": [self.compliance] }
       
         return info
         
@@ -361,8 +362,9 @@ class ServiceHandler(WsgiApp):
         else:
             return self.error_msg("identifier", "Identifier unspecified", status=400)
 
-        self.out_headers['Link'] = '<http://library.stanford.edu/iiif/image-api/compliance.html#level2>;rel="profile"'
-                    
+        self.out_headers['Link'] = '<%s>;rel="profile"' % self.compliance
+        self.out_headers['Access-Control-Allow-Origin'] = '*'
+
         if bits:
             region = bits.pop(0)
             if self.regionRe.match(region) == None:
@@ -410,7 +412,10 @@ class ServiceHandler(WsgiApp):
             return self.error_msg("quality", "Quality unspecified", status=400)                
 
         # Now we need the info for the image from cloudinary or cache
-        info = self.make_info(identifier)
+        try:
+            info = self.make_info(identifier)
+        except api.NotFound:
+            return self.error(404, "No image found with identifier %s" % identifier)
         imageW = info['width']
         imageH = info['height']
 
@@ -509,7 +514,7 @@ class ServiceHandler(WsgiApp):
         if not quality in info['qualities']:
             return self.error_msg('quality', 'Quality not supported for this image: %r' % quality, status=501)            
         elif quality == info['qualities'][1]:
-            quality = 'native'
+            quality = 'default'
         
         nformat = format.upper()
         if nformat == 'JPG':
@@ -529,7 +534,7 @@ class ServiceHandler(WsgiApp):
             cloud_url.append("c_scale,w_%s,h_%s" % (sizeW, sizeH))
         if rotation != 0:
             cloud_url.append("a_%s" % rotation)
-        if quality == "grey":
+        if quality == "gray":
             cloud_url.append("e_grayscale")
         elif quality == "bitonal":
             cloud_url.append("e_blackwhite")
