@@ -1,4 +1,4 @@
-from test import BaseTest
+from .test import BaseTest
 
 class Test_Id_Escaped(BaseTest):
     label = 'Escaped characters processed'

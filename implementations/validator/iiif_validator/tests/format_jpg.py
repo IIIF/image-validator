@@ -1,4 +1,4 @@
-from test import BaseTest
+from .test import BaseTest
 
 class Test_Format_Jpg(BaseTest):
     label = 'JPG format'

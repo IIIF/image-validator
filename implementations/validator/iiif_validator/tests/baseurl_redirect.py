@@ -1,5 +1,11 @@
-from test import BaseTest, ValidatorError
-import urllib2
+from .test import BaseTest, ValidatorError
+try:
+    # python3
+    from urllib.request import Request, urlopen, HTTPError
+except ImportError:
+    # fall back to python2
+    from urllib2 import Request, urlopen, HTTPError
+
 
 class Test_Baseurl_Redirect(BaseTest):
     label = 'Base URL Redirects'
@@ -12,11 +18,11 @@ class Test_Baseurl_Redirect(BaseTest):
         url = result.make_info_url()
         url = url.replace('/info.json', '')
         try:
-            r = urllib2.Request(url)
-            wh = urllib2.urlopen(r)
+            r = Request(url)
+            wh = urlopen(r)
             img = wh.read()   
             wh.close()
-        except urllib2.HTTPError, e:
+        except HTTPError as e:
             wh = e        
 
         u = wh.geturl()

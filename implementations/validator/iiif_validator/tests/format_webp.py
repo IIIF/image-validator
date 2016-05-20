@@ -1,4 +1,4 @@
-from test import BaseTest, ValidatorError
+from .test import BaseTest, ValidatorError
 import urllib
 
 class Test_Format_Webp(BaseTest):

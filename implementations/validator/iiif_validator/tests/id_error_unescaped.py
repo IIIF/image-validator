@@ -1,4 +1,4 @@
-from test import BaseTest
+from .test import BaseTest
 
 class Test_Id_Error_Unescaped(BaseTest):
     label = 'Unescaped identifier gives 400'

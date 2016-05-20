@@ -1,4 +1,4 @@
-from test import BaseTest
+from .test import BaseTest
 
 class Test_Quality_Bitonal(BaseTest):
     label = 'Bitonal quality'

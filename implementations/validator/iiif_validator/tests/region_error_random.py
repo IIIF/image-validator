@@ -1,4 +1,4 @@
-from test import BaseTest
+from .test import BaseTest
 
 class Test_Region_Error_Random(BaseTest):
     label = 'Random region gives 400'

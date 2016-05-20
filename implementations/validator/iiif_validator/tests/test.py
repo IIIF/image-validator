@@ -1,3 +1,4 @@
+"""BaseTest class for tests and ValidationError exception."""
 
 class BaseTest(object):
     label = "test name"
@@ -11,8 +12,8 @@ class BaseTest(object):
 
     @classmethod
     def make_info(cls, version):
-    	if version and not version in cls.versions:
-			return {}            
+        if version and not version in cls.versions:
+            return {}            
         data = {'label': cls.label, 'level':cls.level, 'versions': cls.versions, 'category': cls.category}
         if type(cls.level) == dict:
             # If not version, need to make a choice... make it max()
@@ -25,7 +26,7 @@ class BaseTest(object):
 
 # this looks like it needs refactoring, along with validationInfo.check()
 class ValidatorError(Exception):
-    def __init__(self, type, got, expected, result=None, message="", isWarning=false):
+    def __init__(self, type, got, expected, result=None, message="", isWarning=False):
         self.type = type
         self.got = got
         self.expected = expected

@@ -1,4 +1,4 @@
-from test import BaseTest
+from .test import BaseTest
 import random
 
 class Test_Rot_Full_Non90(BaseTest):

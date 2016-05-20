@@ -1,4 +1,4 @@
-from test import BaseTest
+from .test import BaseTest
 import uuid
 
 class Test_Id_Error_Random(BaseTest):

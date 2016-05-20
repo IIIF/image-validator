@@ -1,29 +1,30 @@
+"""IIIF Image API validator module."""
 
 from functools import partial
 from bottle import Bottle, route, run, request, response, abort, error
-
-# Black Module Magic to get tests in the right place
-import tests
-from tests import *
-all_tests = tests.__all__
-g = globals()
-for t in all_tests:
-    setattr(tests, t, g[t])
-    del globals()[t]
-
-from tests.test import ValidatorError
-
-import urllib2
+import inspect
 import json
-import StringIO
 import sys
 import random
 import os
-
+try:  # python2
+    import BytesIO as io
+    # Must check for python2 first as io exists but is wrong one
+except ImportError:  # python3
+    import io
+try:
+    # python3
+    from urllib.request import urlopen, Request, HTTPError
+except ImportError:
+    # fall back to python2
+    from urllib2 import urlopen, Request, HTTPError
 try:
     from PIL import Image, ImageDraw
 except:
     import Image, ImageDraw
+from .tests.test import ValidatorError
+from . import tests
+
 
 class ValidationInfo(object):
     def __init__(self):
@@ -96,35 +97,38 @@ class TestSuite(object):
 
     def __init__(self, info):
         self.validationInfo = info
+        # Look at all modules imported as tests, find Test_* classes,
+        # take only the first class from any module
+        self.all_tests = {}
+        for module_name, module in inspect.getmembers(tests, inspect.ismodule):
+            # print('mod: ' + module_name)
+            for name, klass in inspect.getmembers(module, inspect.isclass):
+                # print('klass: ' + name)
+                if (name.startswith('Test_')):
+                    self.all_tests[module_name] = klass
+                    break
+        # print(self.all_tests)
 
     def has_test(self, test):
         return hasattr(tests, test)
           
     def list_tests(self, version=""):
         allt = {}
-        for t in all_tests:
-            testm = getattr(tests, t)  # Module
-            oname = "test_%s" % t
-            oname = oname.replace("_", " ").title().replace(" ", "_")
-            testc = getattr(testm, oname) # Class
-            data = testc.make_info(version)
+        for name, klass in self.all_tests.items():
+            data = klass.make_info(version)
             if data:
-                allt[t] = data
+                allt[name] = data
         return allt
 
-    def run_test(self, test, result):   
-
-        testm = getattr(tests, test)
-        oname = "test_%s" % test
-        oname = oname.replace("_", " ").title().replace(" ", "_")
-        testc = getattr(testm, oname)
-        test = testc(self.validationInfo)
+    def run_test(self, test_name, result):   
+        klass = self.all_tests[test_name]
+        test = klass(self.validationInfo)
 
         result.test_info = test.make_info(result.version)
 
         try:
             return test.run(result)
-        except ValidatorError, e:
+        except ValidatorError as e:
             result.exception = e
             return result
  
@@ -180,7 +184,7 @@ class ImageAPI(object):
                 uri = uri[:-1]
                 data.insert(0, ';')
                 # Not an error to have the same URI multiple times (I think!)
-                if not links.has_key(uri):
+                if (uri not in links):
                     links[uri] = {}
                 state = "paramstart"
             elif state == 'paramstart':
@@ -209,7 +213,7 @@ class ImageAPI(object):
                     return
                 state='linkvalue'
                 pt = ''.join(paramType)
-                if not links[uri].has_key(pt):
+                if (pt not in links[uri]):
                     links[uri][pt] = []
             elif state == 'linkvalue':
                 d = data.pop(0)
@@ -242,7 +246,6 @@ class ImageAPI(object):
                         links[uri][pt].append(pv)
         return links
 
-
     def get_uri_for_rel(self, links, rel):
         rel = rel.lower()
         for (uri, info) in links.items():
@@ -252,22 +255,24 @@ class ImageAPI(object):
         return None
 
     def fetch(self, url):
-        
         # Make it look like a real browser request
         HEADERS = {"Origin": "http://iiif.io/", 
             "Referer": "http://iiif.io/api/image/validator",
             "User-Agent": "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.1b3pre) Gecko/20081130 Minefield/3.1b3pre"}
-        req = urllib2.Request(url, headers=HEADERS)
+        req = Request(url, headers=HEADERS)
 
         try:
-            wh = urllib2.urlopen(req, timeout=5)
-        except urllib2.HTTPError, e:
+            wh = urlopen(req, timeout=5)
+        except HTTPError as e:
             wh = e
         except:
             raise 
         data = wh.read()
         # nasty side effect
-        self.last_headers = wh.headers.dict
+        try:  # py2
+            self.last_headers = wh.headers.dict
+        except:  # py3
+            self.last_headers = wh.info()
         self.last_status = wh.code
         self.last_url = url
         wh.close()
@@ -275,17 +280,17 @@ class ImageAPI(object):
         return(data)
 
     def make_url(self, params={}):
-        if self.prefix and not params.has_key('prefix'):
+        if self.prefix and 'prefix' not in params:
             params['prefix'] = self.prefix
-        if not params.has_key('identifier'):
+        if 'identifier' not in params:
             params['identifier'] = self.identifier
-        if not params.has_key('region'):
+        if 'region' not in params:
             params['region'] = 'full'
-        if not params.has_key('size'):
+        if 'size' not in params:
             params['size'] = 'full'
-        if not params.has_key('rotation'):
+        if 'rotation' not in params:
             params['rotation'] = '0'
-        if not params.has_key('quality'):
+        if 'quality' not in params:
             if self.version == "2.0":
                 params['quality'] = 'default'
             else:
@@ -293,7 +298,7 @@ class ImageAPI(object):
         elif params['quality'] == 'grey' and self.version == "2.0":
             # en-us in 2.0+
             params['quality'] = 'gray'
-        if not params.has_key('format') and self.version == "2.0":
+        if 'format' not in params and self.version == "2.0":
             # format is required in 2.0+
             params['format'] = 'jpg'
 
@@ -310,11 +315,11 @@ class ImageAPI(object):
         server = params.get('server', self.server)
         url = "%s://%s/%s" % (scheme, server, url)
         if (self.debug):
-            print url
+            print(url)
         return url
 
     def make_image(self, data):
-        imgio = StringIO.StringIO(data)
+        imgio = io.BytesIO(data)
         img = Image.open(imgio)
         return img
 
@@ -341,12 +346,14 @@ class ImageAPI(object):
         url = self.make_info_url()
         try:
             idata = self.fetch(url) 
-        except:
+        except Exception as e:
             # uhoh
+            #sys.stderr.write('fetch failed ' + str(e))
             return None
         try:
-            info = json.loads(idata)
-        except:
+            info = json.loads(idata.decode('utf-8'))
+        except Exception as e:
+            #sys.stderr.write('json.loads failed ' + str(e))
             return None
         return info
 
@@ -365,8 +372,8 @@ class Validator(object):
         testSuite = TestSuite(info)
 
         if testname == "list_tests":
-            tests = testSuite.list_tests(version)
-            return json.dumps(tests)
+            all_tests = testSuite.list_tests(version)
+            return json.dumps(all_tests)
         if not testSuite.has_test(testname):
             return "No such test: %s" % testname
 
@@ -416,7 +423,7 @@ class Validator(object):
             if result.test_info:
                 info['label'] = result.test_info['label']
 
-        except Exception, e:
+        except Exception as e:
             raise
             info = {'test' : testname, 'status': 'internal-error', 'url':e.url, 'msg':str(e)}
         infojson = json.dumps(info)
@@ -437,7 +444,6 @@ class Validator(object):
         response.headers['Access-Control-Allow-Headers'] = headers
         response.headers['Allow'] = methods
 
-
     def not_implemented(self, *args, **kwargs):
         """Returns not implemented status."""
         abort(501)
@@ -447,7 +453,6 @@ class Validator(object):
 
     options_list = empty_response
     options_detail = empty_response
-
 
     def error(self, error, message=None):
         """Returns the error response."""
