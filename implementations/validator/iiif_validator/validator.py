@@ -7,6 +7,7 @@ import json
 import sys
 import random
 import os
+import ssl
 try:  # python2
     import BytesIO as io
     # Must check for python2 first as io exists but is wrong one
@@ -260,9 +261,9 @@ class ImageAPI(object):
             "Referer": "http://iiif.io/api/image/validator",
             "User-Agent": "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.1b3pre) Gecko/20081130 Minefield/3.1b3pre"}
         req = Request(url, headers=HEADERS)
-
+        context = ssl._create_unverified_context()
         try:
-            wh = urlopen(req, timeout=5)
+            wh = urlopen(req, timeout=5, context=context)
         except HTTPError as e:
             wh = e
         except:

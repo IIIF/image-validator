@@ -1,5 +1,5 @@
 from .test import BaseTest, ValidatorError
-import magic, urllib
+import magic, urllib, ssl
 
 class Test_Format_Jp2(BaseTest):
     label = 'JPEG2000 format'
@@ -13,7 +13,8 @@ class Test_Format_Jp2(BaseTest):
         params = {'format': 'jp2'}
         url = result.make_url(params)
         # Need as plain string for magic
-        wh = urllib.urlopen(url)
+        context = ssl._create_unverified_context()
+        wh = urllib.urlopen(url, context=context)
         img = wh.read()
         wh.close()
 

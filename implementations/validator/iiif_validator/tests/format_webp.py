@@ -1,5 +1,5 @@
 from .test import BaseTest, ValidatorError
-import urllib
+import urllib, ssl
 
 class Test_Format_Webp(BaseTest):
     label = 'WebP format'
@@ -14,7 +14,8 @@ class Test_Format_Webp(BaseTest):
         params = {'format': 'webp'}
         url = result.make_url(params)
         # Need as plain string for magic
-        wh = urllib.urlopen(url)
+        context = ssl._create_unverified_context()
+        wh = urllib.urlopen(url, context=context)
         img = wh.read()
         wh.close()
         if img[8:12] != "WEBP":

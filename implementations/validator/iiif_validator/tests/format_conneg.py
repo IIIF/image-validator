@@ -1,4 +1,5 @@
 from .test import BaseTest
+import ssl
 try:
     # python3
     from urllib.request import Request, urlopen, HTTPError
@@ -18,8 +19,9 @@ class Test_Format_Conneg(BaseTest):
         hdrs = {'Accept': 'image/png;q=1.0'}
         try:
             r = Request(url, headers=hdrs)
-            wh = urlopen(r)
-            img = wh.read()   
+            context = ssl._create_unverified_context()
+            wh = urlopen(r, context=context)
+            img = wh.read()
             wh.close()
         except HTTPError as e:
             wh = e
