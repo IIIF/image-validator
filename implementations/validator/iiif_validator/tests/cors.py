@@ -8,10 +8,10 @@ class Test_Cors(BaseTest):
     validationInfo = None
 
     def run(self, result):
-        info = result.get_info();
         cors = ''
-        for k,v in result.last_headers:
+        for k,v in result.last_headers.iteritems():
             if k.lower() == 'access-control-allow-origin':
                 cors = v
+                break
         self.validationInfo.check('CORS', cors, '*', result)
         return result

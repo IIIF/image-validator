@@ -40,4 +40,8 @@ setup(
         "python-magic",
         "lxml"
     ],
+    test_suite="tests",
+    tests_require=[
+        "mock"
+    ]
 )
