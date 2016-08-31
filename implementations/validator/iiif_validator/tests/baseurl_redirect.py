@@ -1,4 +1,5 @@
 from .test import BaseTest, ValidatorError
+import ssl
 try:
     # python3
     from urllib.request import Request, urlopen, HTTPError
@@ -19,11 +20,12 @@ class Test_Baseurl_Redirect(BaseTest):
         url = url.replace('/info.json', '')
         try:
             r = Request(url)
-            wh = urlopen(r)
-            img = wh.read()   
+            context = ssl._create_unverified_context()
+            wh = urlopen(r, context=context)
+            img = wh.read()
             wh.close()
         except HTTPError as e:
-            wh = e        
+            wh = e
 
         u = wh.geturl()
         if u == url:

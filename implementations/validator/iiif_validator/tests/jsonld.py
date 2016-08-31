@@ -1,4 +1,5 @@
 from .test import BaseTest
+import ssl
 try:
     # python3
     from urllib.request import Request, urlopen, HTTPError
@@ -18,8 +19,9 @@ class Test_Jsonld(BaseTest):
         hdrs = {'Accept': 'application/ld+json'}
         try:
             r = Request(url, headers=hdrs)
-            wh = urlopen(r)
-            img = wh.read()   
+            context = ssl._create_unverified_context()
+            wh = urlopen(r, context=context)
+            img = wh.read()
             wh.close()
         except HTTPError as e:
             wh = e
