@@ -1,0 +1,11 @@
+MANIFEST.in
+__init__.py
+file_magic.py
+magic.py
+setup.cfg
+setup.py
+python_magic.egg-info/PKG-INFO
+python_magic.egg-info/SOURCES.txt
+python_magic.egg-info/dependency_links.txt
+python_magic.egg-info/top_level.txt
+test/test.py

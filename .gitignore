@@ -1,1 +1,7 @@
 /.vagrant
+/.cache
+/build
+/dist
+/iiif_validator.egg-info
+*.pyc
+*~
