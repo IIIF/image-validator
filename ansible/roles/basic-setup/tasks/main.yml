@@ -1,0 +1,17 @@
+---
+- name: install epel-release
+  yum:
+    name: epel-release
+    state: present
+- name: install useful packages
+  yum:
+    pkg: "{{item}}"
+    state: present
+    update_cache: yes
+  with_items:
+    - git-core
+    - curl
+    - vim
+    - nano
+    - tree
+    - htop
