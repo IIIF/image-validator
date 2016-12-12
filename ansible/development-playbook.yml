@@ -8,3 +8,4 @@
   roles:
     - role: basic-setup
     - role: dependencies
+    - role: apache

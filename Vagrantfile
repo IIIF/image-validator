@@ -15,6 +15,9 @@ Vagrant.configure("2") do |config|
   config.vm.box = "puphpet/centos65-x64"
 
   config.vm.network "private_network", ip: "192.168.33.39"
+  
+  # default forwarded port for IIIF validator served through Apache + mod_wsgi
+  config.vm.network "forwarded_port", guest: "8080", host: "8080", auto_correct: true
 
   config.vm.synced_folder '.', '/vagrant'
 
