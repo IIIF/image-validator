@@ -1,0 +1,22 @@
+---
+- name: install Apache and mod_wsgi
+  yum:
+    pkg: "{{item}}"
+    state: present
+    update_cache: yes
+  with_items:
+    - httpd
+    - mod_wsgi
+    - libselinux-python
+- name: Copy and symlink validator Apache config
+  copy:
+    src: iiif-validator.conf
+    dest: /etc/httpd/conf.d/zzz-iiif-validator.conf
+    mode: 0644
+    owner: root
+    group: root
+- name: Start Apache HTTPD and enable service on boot
+  service:
+    name: httpd
+    state: restarted
+    enabled: yes

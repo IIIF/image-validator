@@ -109,6 +109,18 @@ Validator server under WSGI
 
 *need docs here*
 
+Running with Vagrant
+--------------------
+
+For ease of development and local testing, you can provision a virtual machine using Vagrant. To start Vagrant, ssh in, and run the validator on a site::
+
+    vagrant up
+    vagrant ssh
+    cd /vagrant
+    ./iiif-validate.py -h
+    ./iiif-validate.py --scheme=https -s iiif.lib.ncsu.edu -p iiif --level=2 -i 67352ccc-d1b0-11e1-89ae-279075081939
+
+In addition, the Vagrant configuration runs the validator as a WSGI application using ``mod_wsgi`` and Apache ``httpd``, accessible both from with the VM as well as the host machine at `<http://localhost:8080/>`_.
 
 Editing this README
 -------------------

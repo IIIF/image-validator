@@ -1,0 +1,20 @@
+---
+- name: install dependencies
+  yum:
+    pkg: "{{item}}"
+    state: present
+    update_cache: yes
+  with_items:
+    - python-devel
+    - python-pip
+    - libxml2-devel
+    - ImageMagick-devel
+    - libwebp-devel
+    - python-lxml
+    - python-bottle
+    - python-magic
+- name: install Pillow
+  pip:
+    name: "{{item}}"
+  with_items:
+    - Pillow

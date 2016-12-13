@@ -1,0 +1,11 @@
+---
+- hosts: image-validator
+  become: yes
+  become_method: sudo
+  become_user: root
+  remote_user: root
+  gather_facts: yes
+  roles:
+    - role: basic-setup
+    - role: dependencies
+    - role: apache
