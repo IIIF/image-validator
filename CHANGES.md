@@ -1,11 +1,14 @@
 iiif_validator change log
 =========================
 
+v1.0.3 2017-01-19
+  * Fix CORS test <https://github.com/IIIF/image-validator/pull/51>
+  
 v1.0.2 2017-01-19
-  * Tie Pillow to < 4.0.0 as 4.0.0 no longer supports python 2.6
+  * Tie Pillow to < 4.0.0 as 4.0.0 no longer supports python 2.6 <https://github.com/IIIF/image-validator/pull/49>
 
 v1.0.1 2015-05-20
-  * Made to work with python 3.x as well as 2.7 <https://github.com/IIIF/image-api/pull/40>.
+  * Made to work with python 3.x as well as 2.7 <https://github.com/IIIF/image-api/pull/40>
   * Fix for Origin request header <https://github.com/IIIF/image-api/issues/33>
   * Fix for Content-type <https://github.com/IIIF/image-api/issues/31>
   * Timeout added on validation requests <https://github.com/IIIF/image-api/commit/c0d3e6df82e43aaae2e20f49b3546f7ec8e88447>
