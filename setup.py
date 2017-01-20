@@ -35,9 +35,10 @@ setup(
     long_description=open('README').read(),
     url='http://github.com/IIIF/image-api',
     install_requires=[
-        "Pillow",
+        "Pillow>=3.2.0,<4.0.0",  # Pillow 4.0.0 drops python 2.6 support
         "bottle",
         "python-magic",
         "lxml"
     ],
+    test_suite="tests",
 )
