@@ -1,6 +1,9 @@
 iiif_validator change log
 =========================
 
+v1.0.2 2017-01-19
+  * Tie Pillow to < 4.0.0 as 4.0.0 no longer supports python 2.6
+
 v1.0.1 2015-05-20
   * Made to work with python 3.x as well as 2.7 <https://github.com/IIIF/image-api/pull/40>.
   * Fix for Origin request header <https://github.com/IIIF/image-api/issues/33>
