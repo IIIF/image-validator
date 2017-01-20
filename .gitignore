@@ -1,5 +1,6 @@
 /.vagrant
 /.cache
+/.eggs
 /build
 /dist
 /iiif_validator.egg-info

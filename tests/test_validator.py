@@ -1,9 +1,9 @@
 """Test code for validator."""
+import mock
 import unittest
-import re
 
 from iiif_validator.validator import ValidationInfo, TestSuite, ImageAPI, Validator
-
+from iiif_validator.tests.cors import Test_Cors
 
 class TestAll(unittest.TestCase):
     """Tests."""
@@ -28,3 +28,15 @@ class TestAll(unittest.TestCase):
         """Validator class initialization."""
         v = Validator()
         self.assertTrue(hasattr(v, 'handle_test'))
+
+    def test05_cors(self):
+        """Test suite CORS."""
+        m = mock.Mock()
+        t = Test_Cors(m)
+
+        r = mock.Mock()
+        setattr(r, 'last_headers', {
+            'Access-Control-Allow-Origin': ':-)'
+        })
+        t.run(r)
+        m.check.assert_called_with('CORS', ':-)', '*', r)
