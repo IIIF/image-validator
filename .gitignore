@@ -6,3 +6,4 @@
 /iiif_validator.egg-info
 *.pyc
 *~
+.tox

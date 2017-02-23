@@ -1,0 +1,6 @@
+-e git+https://github.com/python-pillow/Pillow@3.4.x#egg=Pillow
+-e git+https://github.com/bottlepy/bottle@release-0.12#egg=bottle
+-e git+https://github.com/ahupp/python-magic#egg=python-magic
+-e git+https://github.com/lxml/lxml#egg=lxml
+# LXML requires Cython>=0.20
+Cython>=0.20
