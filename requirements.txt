@@ -1,0 +1,4 @@
+lxml
+bottle
+python-magic
+pillow
