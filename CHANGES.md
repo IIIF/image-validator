@@ -1,6 +1,9 @@
 iiif_validator change log
 =========================
 
+v1.0.5 ????-??-??
+  * ...
+
 v1.0.4 2017-09-08
   * Add license information <https://github.com/IIIF/image-validator/pull/56>
   * Use Requirements-Builder and Tox for testing <https://github.com/IIIF/image-validator/pull/53>
