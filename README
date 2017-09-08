@@ -45,7 +45,7 @@ be present in the ``install:`` section of ``.travis.yml``::
     install:
       - sudo apt-get update
       - sudo apt-get install libmagic-dev
-      - pip install Pillow iiif_validator
+      - pip install iiif_validator
       ...
 
 and then a single validation can be added to the commands under
