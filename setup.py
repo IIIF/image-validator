@@ -28,7 +28,6 @@ setup(
         "Operating System :: OS Independent",
         "Programming Language :: Python",
         "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.6",
         "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.4",
@@ -44,8 +43,8 @@ setup(
     long_description=open('README').read(),
     url='http://github.com/IIIF/image-api',
     install_requires=[
-        "Pillow>=3.2.0,<4.0.0",  # Pillow 4.0.0 drops python 2.6 support
-        "bottle>=0.12.1,<0.13",  # Bottle 0.13 drops python 2.6 support
+        "Pillow>=3.2.0",
+        "bottle>=0.12.1",
         "python-magic>=0.4.12",
         "lxml>=3.7.0"
     ],
