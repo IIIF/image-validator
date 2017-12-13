@@ -11,17 +11,26 @@ This validator supports the same validations that are available on the
 Installation
 ------------
 
-Dependencies:
+Installation from pypi
+~~~~~~~~~~~~~~~~~~~~~~
 
-  * lxml
-  * bottle
-  * python-magic (which requires libmagic)
-  * PIL (via Pillow)
+The following should install scripts, library, and the necessary dependencies::
 
-On a mac one can do::
+   pip install iiif-validator
+
+Manual installation
+~~~~~~~~~~~~~~~~~~~
+
+Installation from `source code
+<https://github.com/IIIF/image-validator>` can de done with::
+
+   python setup.py install
+
+which should install scripts, library, and the necessary dependencies. Note that ``setup.py`` includes directives to pin certain libraries to particular versions for compatibility.
+
+The ``python-magic`` module requires ``libmagic`` which, on a mac, one can install with::
 
     brew install libmagic
-    pip install lxml bottle python-magic pillow
 
 
 Command line validator, ``iiif-validate.py``
@@ -57,12 +66,12 @@ image ``image_id1`` at version 1.1, level 1, one might use::
       ...
       - iiif-validate.py -s localhost:8000 -p prefix -i image_id1 --version=1.1 --level 1 --quiet
 
-The `iiif-validate.py` script returns 0 exit code on success, non-zero
+The ``iiif-validate.py`` script returns 0 exit code on success, non-zero
 on failure, in order to work easily with Travis CI.
 
 
-Running the validator server, `iiif-validator.py`
--------------------------------------------------
+Running the validator server, ``iiif-validator.py``
+---------------------------------------------------
 
 The primary installation of the validator server is on the `IIIF
 <http://iiif.io/>`_ website at
