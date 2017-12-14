@@ -5,8 +5,10 @@ python:
   - "3.5"
   - "3.6"
 install:
-  - pip install tox tox-travis
+  - pip install tox tox-travis coveralls
+  - python setup.py install
 script:
   - tox
-before_deploy:
-  - mkdir build; zip -q -r build/image-validator.zip .
+after_success:
+  - coverage run --source=iiif_validator setup.py test
+  - coveralls
