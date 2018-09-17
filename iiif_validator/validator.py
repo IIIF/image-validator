@@ -456,8 +456,10 @@ class Validator(object):
 
     def error(self, error, message=None):
         """Returns the error response."""
-        return self._jsonify({"error": error.status_code,
-                        "message": error.body or message}, "")
+        data = json.dumps({"error": error.status_code, "message": error.body or message})
+        # add content-type and CORS headers to error
+        self.after_request()
+        return data
 
     def get_error_handler(self):
         """Customized errors"""
