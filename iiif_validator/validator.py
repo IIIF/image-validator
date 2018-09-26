@@ -375,7 +375,7 @@ class Validator(object):
             all_tests = testSuite.list_tests(version)
             return json.dumps(all_tests)
         if not testSuite.has_test(testname):
-            return "No such test: %s" % testname
+            abort(404,"No such test: %s" % testname)
 
         server = request.query.get('server', '')
         server = server.strip()
@@ -392,7 +392,7 @@ class Validator(object):
         else:
             auth = ""
         if not server:
-            return "Missing mandatory parameter: server"
+            abort(400, "Missing mandatory parameter: server")
 
         if server[-1] == '/':
             server = server[:-1]
@@ -409,7 +409,7 @@ class Validator(object):
         identifier = request.query.get('identifier', '')
         identifier = identifier.strip()
         if not identifier:
-            return "Missing mandatory parameter: identifier"
+            abort(400, "Missing mandatory parameter: identifier")
 
         try:
             result = ImageAPI(identifier, server, prefix, scheme, auth, version)
@@ -456,8 +456,10 @@ class Validator(object):
 
     def error(self, error, message=None):
         """Returns the error response."""
-        return self._jsonify({"error": error.status_code,
-                        "message": error.body or message}, "")
+        data = json.dumps({"error": error.status_code, "message": error.body or message})
+        # add content-type and CORS headers to error
+        self.after_request()
+        return data
 
     def get_error_handler(self):
         """Customized errors"""
