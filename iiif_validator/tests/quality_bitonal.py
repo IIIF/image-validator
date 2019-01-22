@@ -18,7 +18,7 @@ class Test_Quality_Bitonal(BaseTest):
                 return self.validationInfo.check('quality', 1, 1, result)
             else:
                 # check vast majority of px are 0,0,0 or 255,255,255
-                okpx = sum([x[0] for x in cols if sum(x[1]) < 15 or sum(x[1]) > 750])
+                okpx = sum([x[0] for x in cols if int(x[1]) < 15 or int(x[1]) > 750])
                 if okpx > 650000:
                     return self.validationInfo.check('quality', 1,1, result)
                 else:
