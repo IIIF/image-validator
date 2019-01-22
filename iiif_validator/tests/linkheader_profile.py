@@ -4,7 +4,7 @@ class Test_Linkheader_Profile(BaseTest):
     label = 'Profile Link Header'
     level = 3
     category = 7
-    versions = [u'1.0', u'1.1', u'2.0']
+    versions = [u'1.0', u'1.1', u'2.0', u'2.1']
     validationInfo = None
 
     def run(self, result):

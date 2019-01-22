@@ -5,7 +5,7 @@ class Test_Info_Json(BaseTest):
     label = "Check Image Information"
     level = 0
     category = 1
-    versions = ["1.0","1.1","2.0"]
+    versions = ["1.0","1.1","2.0", "2.1"]
     validationInfo = None
 
     def __init__(self, info):

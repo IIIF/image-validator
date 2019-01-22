@@ -3,9 +3,9 @@ import random
 
 class Test_Rot_Region_Basic(BaseTest):
     label = 'Rotation of region by 90 degree values'
-    level = {u'2.0': 2, u'1.0': 1, u'1.1': 1}
+    level = {u'2.0': 2, u'1.0': 1, u'1.1': 1, u'2.1' : 2}
     category = 4
-    versions = [u'1.0', u'1.1', u'2.0']
+    versions = [u'1.0', u'1.1', u'2.0', u'2.1']
     validationInfo = None
 
     def run(self, result):

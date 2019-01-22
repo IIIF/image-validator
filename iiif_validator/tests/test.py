@@ -12,6 +12,7 @@ class BaseTest(object):
 
     @classmethod
     def make_info(cls, version):
+        # print cls.label, version, cls.versions
         if version and not version in cls.versions:
             return {}            
         data = {'label': cls.label, 'level':cls.level, 'versions': cls.versions, 'category': cls.category}

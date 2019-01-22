@@ -11,7 +11,7 @@ class Test_Baseurl_Redirect(BaseTest):
     label = 'Base URL Redirects'
     level = 1
     category = 7
-    versions = [u'2.0']
+    versions = [u'2.0', u'2.1']
     validationInfo = None
 
     def run(self, result):
@@ -33,3 +33,5 @@ class Test_Baseurl_Redirect(BaseTest):
             # we must have redirected if our url is not what was requested
             result.tests.append('redirect')
             return result
+
+

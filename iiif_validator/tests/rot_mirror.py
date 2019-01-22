@@ -5,7 +5,7 @@ class Test_Rot_Mirror(BaseTest):
     label = 'Mirroring'
     level = 3
     category = 4
-    versions = [u'2.0']
+    versions = [u'2.0', u'2.1']
     validationInfo = None
 
     def run(self, result):

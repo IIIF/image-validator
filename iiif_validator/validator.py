@@ -25,7 +25,6 @@ except:
 from .tests.test import ValidatorError
 from . import tests
 
-
 class ValidationInfo(object):
     def __init__(self):
 
@@ -120,7 +119,7 @@ class TestSuite(object):
                 allt[name] = data
         return allt
 
-    def run_test(self, test_name, result):   
+    def run_test(self, test_name, result):
         klass = self.all_tests[test_name]
         test = klass(self.validationInfo)
 
@@ -134,7 +133,7 @@ class TestSuite(object):
  
 class ImageAPI(object):
 
-    def __init__(self, identifier, server, prefix="", scheme="http", auth="", version="2.0", debug=True):
+    def __init__(self, identifier, server, prefix="", scheme="http", auth="", version="2.1", debug=True):
 
         self.iiifNS = "{http://library.stanford.edu/iiif/image-api/ns/}"
         self.debug = debug
@@ -291,14 +290,14 @@ class ImageAPI(object):
         if 'rotation' not in params:
             params['rotation'] = '0'
         if 'quality' not in params:
-            if self.version == "2.0":
+            if self.version in ("2.0", "2.1"):
                 params['quality'] = 'default'
             else:
                 params['quality'] = 'native'        
-        elif params['quality'] == 'grey' and self.version == "2.0":
+        elif params['quality'] == 'grey' and self.version in ("2.0", "2.1"):
             # en-us in 2.0+
             params['quality'] = 'gray'
-        if 'format' not in params and self.version == "2.0":
+        if 'format' not in params and self.version in ("2.0", "2.1"):
             # format is required in 2.0+
             params['format'] = 'jpg'
 
@@ -357,16 +356,13 @@ class ImageAPI(object):
             return None
         return info
 
-
 class Validator(object):
-
     def __init__(self,debug=True):
         if (debug):
             sys.stderr.write('init on Validator\n')
             sys.stderr.flush()
 
     def handle_test(self, testname):
-
         version = request.query.get('version', '2.0')
         info = ValidationInfo()
         testSuite = TestSuite(info)

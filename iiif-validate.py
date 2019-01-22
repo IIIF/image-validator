@@ -27,8 +27,8 @@ p.add_option('--scheme', action='store', default='http',
              help="scheme (http or https, default http)")
 p.add_option('--auth','-a', action='store', default='',
              help="auth info for service (default none)")
-p.add_option('--version', action='store', default='2.0',
-             help="IIIF API version to test for (default 2.0)")
+p.add_option('--version', action='store', default='2.1',
+             help="IIIF API version to test for (default 2.1)")
 p.add_option('--level', action='store', type='int', default=1,
              help="compliance level to test (default 1)")
 p.add_option('--test', action='append', type='string',

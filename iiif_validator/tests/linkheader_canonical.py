@@ -4,7 +4,7 @@ class Test_Linkheader_Canonical(BaseTest):
     label = 'Canonical Link Header'
     level = 3
     category = 7
-    versions = [u'2.0']
+    versions = [u'2.0', u'2.1']
     validationInfo = None
 
     def run(self, result):
