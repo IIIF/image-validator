@@ -1,5 +1,6 @@
 from .test import BaseTest
 
+
 class Test_Id_Basic(BaseTest):
     label = 'Image is returned'
     level = 0

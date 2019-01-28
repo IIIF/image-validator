@@ -1,5 +1,6 @@
 from .test import BaseTest
 
+
 class Test_Region_Error_Random(BaseTest):
     label = 'Random region gives 400'
     level = 1
@@ -12,7 +13,7 @@ class Test_Region_Error_Random(BaseTest):
             url = result.make_url({'region': self.validationInfo.make_randomstring(6)})
             error = result.fetch(url)
             self.validationInfo.check('status', result.last_status, 400, result)
-            return result          
+            return result
         except:
             # self.validationInfo.check('status', result.last_status, 200)
             raise

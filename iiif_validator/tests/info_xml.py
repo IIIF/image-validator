@@ -1,6 +1,7 @@
 from .test import BaseTest, ValidatorError
 from lxml import etree
 
+
 class Test_Info_Xml(BaseTest):
     label = "Check Image Information (XML)"
     level = 0
@@ -11,7 +12,7 @@ class Test_Info_Xml(BaseTest):
     def __init__(self, info):
         self.validationInfo = info
 
-    def run(self, result):      
+    def run(self, result):
         url = result.make_info_url('xml')
         try:
             data = result.fetch(url)
@@ -24,7 +25,7 @@ class Test_Info_Xml(BaseTest):
         except:
             raise ValidatorError('format', 'XML', 'Unknown', result)
 
-        ns = { 'i':'http://library.stanford.edu/iiif/image-api/ns/'}
+        ns = {'i': 'http://library.stanford.edu/iiif/image-api/ns/'}
         self.validationInfo.check('required-field: /info', len(dom.xpath('/i:info', namespaces=ns)), 1, result)
         self.validationInfo.check('required-field: /info/identifier', len(dom.xpath('/i:info/i:identifier', namespaces=ns)), 1, result)
         self.validationInfo.check('required-field: /info/height', len(dom.xpath('/i:info/i:height', namespaces=ns)), 1, result)

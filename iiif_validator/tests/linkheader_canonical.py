@@ -1,5 +1,6 @@
 from .test import BaseTest, ValidatorError
 
+
 class Test_Linkheader_Canonical(BaseTest):
     label = 'Canonical Link Header'
     level = 3

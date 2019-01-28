@@ -1,5 +1,6 @@
 from .test import BaseTest
 
+
 class Test_Id_Error_Escapedslash(BaseTest):
     label = 'Forward slash gives 404'
     level = 1
@@ -12,6 +13,6 @@ class Test_Id_Error_Escapedslash(BaseTest):
             url = result.make_url({'identifier': 'a/b'})
             error = result.fetch(url)
             self.validationInfo.check('status', result.last_status, 404, result)
-            return result            
+            return result
         except:
             raise

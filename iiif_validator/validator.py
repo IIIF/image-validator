@@ -21,59 +21,61 @@ except ImportError:
 try:
     from PIL import Image, ImageDraw
 except:
-    import Image, ImageDraw
+    import Image
+    import ImageDraw
 from .tests.test import ValidatorError
 from . import tests
+
 
 class ValidationInfo(object):
     def __init__(self):
 
-        self.mimetypes = {'bmp' : 'image/bmp',  
-                   'gif' : 'image/gif', 
-                   'jpg': 'image/jpeg', 
-                   'pcx' : 'image/pcx', 
-                   'pdf' :  'application/pdf', 
-                   'png' : 'image/png', 
-                   'tif' : 'image/tiff',
-                   'webp' : 'image/webp'}
+        self.mimetypes = {'bmp': 'image/bmp',
+                   'gif': 'image/gif',
+                   'jpg': 'image/jpeg',
+                   'pcx': 'image/pcx',
+                   'pdf': 'application/pdf',
+                   'png': 'image/png',
+                   'tif': 'image/tiff',
+                   'webp': 'image/webp'}
 
-        self.pil_formats = {'BMP' : 'image/bmp',  
-                   'GIF' : 'image/gif', 
-                   'JPEG': 'image/jpeg', 
-                   'PCX' : 'image/pcx', 
-                   'PDF' :  'application/pdf', 
-                   'PNG' : 'image/png', 
-                   'TIFF' : 'image/tiff'}
-        
-        self.colorInfo = [[(61, 170, 126), (61, 107, 178), (82, 85, 234), (164, 122, 110), (129, 226, 88), (91, 37, 121), (138, 128, 42), (6, 85, 234), (121, 109, 204), (65, 246, 84)], 
-            [(195, 133, 120), (171, 43, 102), (118, 45, 130), (242, 105, 171), (5, 85, 105), (113, 58, 41), (223, 69, 3), (45, 79, 140), (35, 117, 248), (121, 156, 184)], 
-            [(168, 92, 163), (28, 91, 143), (86, 41, 173), (111, 230, 29), (174, 189, 7), (18, 139, 88), (93, 168, 128), (35, 2, 14), (204, 105, 137), (18, 86, 128)], 
-            [(107, 55, 178), (251, 40, 184), (47, 36, 139), (2, 127, 170), (224, 12, 114), (133, 67, 108), (239, 174, 209), (85, 29, 156), (8, 55, 188), (240, 125, 7)], 
-            [(112, 167, 30), (166, 63, 161), (232, 227, 23), (74, 80, 135), (79, 97, 47), (145, 160, 80), (45, 160, 79), (12, 54, 215), (203, 83, 70), (78, 28, 46)], 
-            [(102, 193, 63), (225, 55, 91), (107, 194, 147), (167, 24, 95), (249, 214, 96), (167, 34, 136), (53, 254, 209), (172, 222, 21), (153, 77, 51), (137, 39, 183)], 
-            [(159, 182, 192), (128, 252, 173), (148, 162, 90), (192, 165, 115), (154, 102, 2), (107, 237, 62), (111, 236, 219), (129, 113, 172), (239, 204, 166), (60, 96, 37)], 
-            [(72, 172, 227), (119, 51, 100), (209, 85, 165), (87, 172, 159), (188, 42, 162), (99, 3, 54), (7, 42, 37), (105, 155, 100), (38, 220, 240), (98, 46, 2)], 
-            [(18, 223, 145), (189, 121, 17), (88, 3, 210), (181, 16, 43), (189, 39, 244), (123, 147, 116), (246, 148, 214), (223, 177, 199), (77, 18, 136), (235, 36, 21)], 
+        self.pil_formats = {'BMP': 'image/bmp',
+                   'GIF': 'image/gif',
+                   'JPEG': 'image/jpeg',
+                   'PCX': 'image/pcx',
+                   'PDF': 'application/pdf',
+                   'PNG': 'image/png',
+                   'TIFF': 'image/tiff'}
+
+        self.colorInfo = [[(61, 170, 126), (61, 107, 178), (82, 85, 234), (164, 122, 110), (129, 226, 88), (91, 37, 121), (138, 128, 42), (6, 85, 234), (121, 109, 204), (65, 246, 84)],
+            [(195, 133, 120), (171, 43, 102), (118, 45, 130), (242, 105, 171), (5, 85, 105), (113, 58, 41), (223, 69, 3), (45, 79, 140), (35, 117, 248), (121, 156, 184)],
+            [(168, 92, 163), (28, 91, 143), (86, 41, 173), (111, 230, 29), (174, 189, 7), (18, 139, 88), (93, 168, 128), (35, 2, 14), (204, 105, 137), (18, 86, 128)],
+            [(107, 55, 178), (251, 40, 184), (47, 36, 139), (2, 127, 170), (224, 12, 114), (133, 67, 108), (239, 174, 209), (85, 29, 156), (8, 55, 188), (240, 125, 7)],
+            [(112, 167, 30), (166, 63, 161), (232, 227, 23), (74, 80, 135), (79, 97, 47), (145, 160, 80), (45, 160, 79), (12, 54, 215), (203, 83, 70), (78, 28, 46)],
+            [(102, 193, 63), (225, 55, 91), (107, 194, 147), (167, 24, 95), (249, 214, 96), (167, 34, 136), (53, 254, 209), (172, 222, 21), (153, 77, 51), (137, 39, 183)],
+            [(159, 182, 192), (128, 252, 173), (148, 162, 90), (192, 165, 115), (154, 102, 2), (107, 237, 62), (111, 236, 219), (129, 113, 172), (239, 204, 166), (60, 96, 37)],
+            [(72, 172, 227), (119, 51, 100), (209, 85, 165), (87, 172, 159), (188, 42, 162), (99, 3, 54), (7, 42, 37), (105, 155, 100), (38, 220, 240), (98, 46, 2)],
+            [(18, 223, 145), (189, 121, 17), (88, 3, 210), (181, 16, 43), (189, 39, 244), (123, 147, 116), (246, 148, 214), (223, 177, 199), (77, 18, 136), (235, 36, 21)],
             [(146, 137, 176), (84, 248, 55), (61, 144, 79), (110, 251, 49), (43, 105, 132), (165, 131, 55), (60, 23, 225), (147, 197, 226), (80, 67, 104), (161, 119, 182)]]
-  
-    def do_test_square(self, img, x,y, result):
+
+    def do_test_square(self, img, x, y, result):
         truth = self.colorInfo[x][y]
         # Similarity, not necessarily perceived
-        cols = img.getcolors(maxcolors=1000000) #1kx1k image so <=1M colors
+        cols = img.getcolors(maxcolors=1000000)  # 1kx1k image so <=1M colors
         cols.sort(reverse=True)
         col = cols[0][1]
         # If image has palette, col is int and we look up [r,g,b]
         pal = img.getpalette()
         if (pal):
-            col = [pal[col*3],pal[col*3+1],pal[col*3+2]]
-        ok = abs(col[0]-truth[0]) < 6 and abs(col[1]-truth[1]) < 6 and abs(col[2]-truth[2]) < 6
-        result.tests.append("%s,%s:%s" % (x,y,ok))
-        return ok           
+            col = [pal[col * 3], pal[col * 3 + 1], pal[col * 3 + 2]]
+        ok = abs(col[0] - truth[0]) < 6 and abs(col[1] - truth[1]) < 6 and abs(col[2] - truth[2]) < 6
+        result.tests.append("%s,%s:%s" % (x, y, ok))
+        return ok
 
     def make_randomstring(self, length):
         stuff = []
         for x in range(length):
-            stuff.append(chr(random.randint(48, 122)))    
+            stuff.append(chr(random.randint(48, 122)))
         val = ''.join(stuff)
         # prevent end-of-path-segment characters
         val = val.replace('?', '$')
@@ -110,7 +112,7 @@ class TestSuite(object):
 
     def has_test(self, test):
         return hasattr(tests, test)
-          
+
     def list_tests(self, version=""):
         allt = {}
         for name, klass in self.all_tests.items():
@@ -130,7 +132,8 @@ class TestSuite(object):
         except ValidatorError as e:
             result.exception = e
             return result
- 
+
+
 class ImageAPI(object):
 
     def __init__(self, identifier, server, prefix="", scheme="http", auth="", version="2.1", debug=True):
@@ -171,11 +174,11 @@ class ImageAPI(object):
                 while d.isspace():
                     d = data.pop(0)
                 if d != "<":
-                    raise ValueError("Parsing Link Header: Expected < in start, got %s" % d)                    
+                    raise ValueError("Parsing Link Header: Expected < in start, got %s" % d)
                 state = "uri"
             elif state == "uri":
                 uri = []
-                d = data.pop(0)                
+                d = data.pop(0)
                 while d != ";":
                     uri.append(d)
                     d = data.pop(0)
@@ -191,7 +194,7 @@ class ImageAPI(object):
                 while data and d.isspace():
                     d = data.pop(0)
                 if d == ";":
-                    state = 'linkparam';
+                    state = 'linkparam'
                 elif d == ',':
                     state = 'start'
                 else:
@@ -210,7 +213,7 @@ class ImageAPI(object):
                 if d != "=":
                     raise ValueError("Parsing Link Header: Expected = in linkparam, got %s" % d)
                     return
-                state='linkvalue'
+                state = 'linkvalue'
                 pt = ''.join(paramType)
                 if (pt not in links[uri]):
                     links[uri][pt] = []
@@ -255,7 +258,7 @@ class ImageAPI(object):
 
     def fetch(self, url):
         # Make it look like a real browser request
-        HEADERS = {"Origin": "http://iiif.io/", 
+        HEADERS = {"Origin": "http://iiif.io/",
             "Referer": "http://iiif.io/api/image/validator",
             "User-Agent": "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.1b3pre) Gecko/20081130 Minefield/3.1b3pre"}
         req = Request(url, headers=HEADERS)
@@ -265,7 +268,7 @@ class ImageAPI(object):
         except HTTPError as e:
             wh = e
         except:
-            raise 
+            raise
         data = wh.read()
         # nasty side effect
         try:  # py2
@@ -293,7 +296,7 @@ class ImageAPI(object):
             if self.version in ("2.0", "2.1"):
                 params['quality'] = 'default'
             else:
-                params['quality'] = 'native'        
+                params['quality'] = 'native'
         elif params['quality'] == 'grey' and self.version in ("2.0", "2.1"):
             # en-us in 2.0+
             params['quality'] = 'gray'
@@ -301,14 +304,14 @@ class ImageAPI(object):
             # format is required in 2.0+
             params['format'] = 'jpg'
 
-        order = ('prefix','identifier','region','size','rotation','quality')
+        order = ('prefix', 'identifier', 'region', 'size', 'rotation', 'quality')
 
         if 'prefix' in params:
             params['prefix'] = '/'.join(self.prefix)
         url = '/'.join(params.get(p) for p in order if params.get(p) is not None)
 
         if params.get('format') is not None:
-            url+='.%s' % params['format']
+            url += '.%s' % params['format']
 
         scheme = params.get('scheme', self.scheme)
         server = params.get('server', self.server)
@@ -329,13 +332,13 @@ class ImageAPI(object):
         return img
 
     def make_info_url(self, format='json'):
-        params = {'server':self.server, 'identifier':self.identifier, 'scheme':self.scheme}
+        params = {'server': self.server, 'identifier': self.identifier, 'scheme': self.scheme}
         if self.prefix:
             parts = self.prefix[:]
         else:
             parts = []
         parts.extend([self.identifier, 'info'])
-        url = '%s.%s' %  ('/'.join(parts), format)
+        url = '%s.%s' % ('/'.join(parts), format)
         scheme = params.get('scheme', self.scheme)
         server = params.get('server', self.server)
         url = "%s://%s/%s" % (self.scheme, self.server, url)
@@ -344,7 +347,7 @@ class ImageAPI(object):
     def get_info(self):
         url = self.make_info_url()
         try:
-            idata = self.fetch(url) 
+            idata = self.fetch(url)
         except Exception as e:
             # uhoh
             #sys.stderr.write('fetch failed ' + str(e))
@@ -356,8 +359,9 @@ class ImageAPI(object):
             return None
         return info
 
+
 class Validator(object):
-    def __init__(self,debug=True):
+    def __init__(self, debug=True):
         if (debug):
             sys.stderr.write('init on Validator\n')
             sys.stderr.flush()
@@ -371,7 +375,7 @@ class Validator(object):
             all_tests = testSuite.list_tests(version)
             return json.dumps(all_tests)
         if not testSuite.has_test(testname):
-            abort(404,"No such test: %s" % testname)
+            abort(404, "No such test: %s" % testname)
 
         server = request.query.get('server', '')
         server = server.strip()
@@ -379,12 +383,12 @@ class Validator(object):
             scheme = 'https'
             server = server.replace('https://', '')
         else:
-            scheme="http"
-            server = server.replace('http://', '')  
-        atidx = server.find('@') 
+            scheme = "http"
+            server = server.replace('http://', '')
+        atidx = server.find('@')
         if atidx > -1:
             auth = server[:atidx]
-            server = server[atidx+1:]
+            server = server[atidx + 1:]
         else:
             auth = ""
         if not server:
@@ -413,18 +417,18 @@ class Validator(object):
             testSuite.run_test(testname, result)
             if result.exception:
                 e = result.exception
-                info = {'test' : testname, 'status': 'error', 'url':result.urls, 'got':e.got, 'expected': e.expected, 'type': e.type}
+                info = {'test': testname, 'status': 'error', 'url': result.urls, 'got': e.got, 'expected': e.expected, 'type': e.type}
             else:
-                info = {'test' : testname, 'status': 'success', 'url':result.urls, 'tests':result.tests}
+                info = {'test': testname, 'status': 'success', 'url': result.urls, 'tests': result.tests}
             if result.test_info:
                 info['label'] = result.test_info['label']
 
         except Exception as e:
             raise
-            info = {'test' : testname, 'status': 'internal-error', 'url':e.url, 'msg':str(e)}
+            info = {'test': testname, 'status': 'internal-error', 'url': e.url, 'msg': str(e)}
         infojson = json.dumps(info)
         return infojson
-  
+
     def dispatch_views(self):
         pfx = ""
         self.app.route("/%s<testname>" % pfx, "GET", self.handle_test)
@@ -480,6 +484,7 @@ class Validator(object):
 def apache():
     v = Validator()
     return v.get_bottle_app()
+
 
 def main():
     mr = Validator()

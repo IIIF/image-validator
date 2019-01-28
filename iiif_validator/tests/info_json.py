@@ -1,16 +1,17 @@
 
 from .test import BaseTest, ValidatorError
 
+
 class Test_Info_Json(BaseTest):
     label = "Check Image Information"
     level = 0
     category = 1
-    versions = ["1.0","1.1","2.0", "2.1"]
+    versions = ["1.0", "1.1", "2.0", "2.1"]
     validationInfo = None
 
     def __init__(self, info):
         self.validationInfo = info
-        
+
     def run(self, result):
         # Does server have info.json
         try:
@@ -25,7 +26,7 @@ class Test_Info_Json(BaseTest):
 
             # Now switch on version
             if result.version == "1.0":
-                self.validationInfo.check('required-field: identifier', 'identifier' in info, True, result)                
+                self.validationInfo.check('required-field: identifier', 'identifier' in info, True, result)
             else:
 
                 self.validationInfo.check('required-field: @id', '@id' in info, True, result)
@@ -35,11 +36,11 @@ class Test_Info_Json(BaseTest):
 
                 self.validationInfo.check('required-field: @context', '@context' in info, True, result)
                 if result.version == "1.1":
-                    self.validationInfo.check('correct-context', info['@context'], 
+                    self.validationInfo.check('correct-context', info['@context'],
                         ["http://library.stanford.edu/iiif/image-api/1.1/context.json", "http://iiif.io/api/image/1/context.json"], result)
                 elif result.version[0] == "2":
                     self.validationInfo.check('correct-context', info['@context'], "http://iiif.io/api/image/2/context.json", result)
-                
+
                 if int(result.version[0]) >= 2:
                     self.validationInfo.check('required-field: protocol', 'protocol' in info, True, result)
                     self.validationInfo.check('correct-protocol', info['protocol'], 'http://iiif.io/api/image', result)
@@ -65,8 +66,8 @@ class Test_Info_Json(BaseTest):
                         self.validationInfo.check('is-list', type(tiles), list, result)
                         for t in tiles:
                             self.validationInfo.check('is-object', type(t), dict, result)
-                            self.validationInfo.check('required-field: scaleFactors', 'scaleFactors' in t, True, result) 
-                            self.validationInfo.check('required-field: width', 'width' in t, True, result)                        
+                            self.validationInfo.check('required-field: scaleFactors', 'scaleFactors' in t, True, result)
+                            self.validationInfo.check('required-field: width', 'width' in t, True, result)
                             self.validationInfo.check('type-is-int: width', type(t['width']), int, result)
 
             return result

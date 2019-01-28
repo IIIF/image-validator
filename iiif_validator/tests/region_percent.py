@@ -1,6 +1,7 @@
 from .test import BaseTest, ValidatorError
 import random
 
+
 class Test_Region_Percent(BaseTest):
     label = 'Region specified by percent'
     level = 2
@@ -12,17 +13,17 @@ class Test_Region_Percent(BaseTest):
         try:
             match = 0
             for i in range(5):
-                x = random.randint(0,9)
-                y = random.randint(0,9)
-                params = {'region' : 'pct:%s,%s,9,9' % (x*10+1, y*10+1)}
-                img = result.get_image(params)                           
-                ok = self.validationInfo.do_test_square(img,x,y, result)
+                x = random.randint(0, 9)
+                y = random.randint(0, 9)
+                params = {'region': 'pct:%s,%s,9,9' % (x * 10 + 1, y * 10 + 1)}
+                img = result.get_image(params)
+                ok = self.validationInfo.do_test_square(img, x, y, result)
                 if ok:
                     match += 1
-            if match >= 4:         
+            if match >= 4:
                 return result
             else:
-                raise ValidatorError('color', 1,0, result)
+                raise ValidatorError('color', 1, 0, result)
         except:
             self.validationInfo.check('status', result.last_status, 200, result)
             raise

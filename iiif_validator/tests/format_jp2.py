@@ -1,9 +1,11 @@
 from .test import BaseTest, ValidatorError
-import magic, urllib
+import magic
+import urllib
+
 
 class Test_Format_Jp2(BaseTest):
     label = 'JPEG2000 format'
-    level = {u'2.0': 3, u'1.0': 2, u'1.1': 3, u'2.1' : 3}
+    level = {u'2.0': 3, u'1.0': 2, u'1.1': 3, u'2.1': 3}
     category = 6
     versions = [u'1.0', u'1.1', u'2.0', u'2.1']
     validationInfo = None

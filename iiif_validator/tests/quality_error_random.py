@@ -1,5 +1,6 @@
 from .test import BaseTest
 
+
 class Test_Quality_Error_Random(BaseTest):
     label = 'Random quality gives 400'
     level = 1
@@ -12,6 +13,6 @@ class Test_Quality_Error_Random(BaseTest):
             url = result.make_url({'quality': self.validationInfo.make_randomstring(6)})
             error = result.fetch(url)
             self.validationInfo.check('status', result.last_status, 400, result)
-            return result 
+            return result
         except:
             raise

@@ -1,5 +1,6 @@
 from .test import BaseTest
 
+
 class Test_Format_Tif(BaseTest):
     label = 'TIFF format'
     level = 3

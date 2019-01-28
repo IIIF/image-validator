@@ -1,6 +1,7 @@
 from .test import BaseTest, ValidatorError
 import urllib
 
+
 class Test_Format_Webp(BaseTest):
     label = 'WebP format'
     level = 3

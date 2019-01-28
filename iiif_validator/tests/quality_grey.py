@@ -1,5 +1,6 @@
 from .test import BaseTest
 
+
 class Test_Quality_Grey(BaseTest):
     label = 'Gray/Grey quality'
     level = 2
@@ -17,16 +18,16 @@ class Test_Quality_Grey(BaseTest):
             elif img.mode == 'L':
                 return self.validationInfo.check('quality', 1, 1, result)
             else:
-                cols = img.getcolors(maxcolors=1000000) #1kx1k image so <=1M colors
+                cols = img.getcolors(maxcolors=1000000)  # 1kx1k image so <=1M colors
                 # check vast majority of px are triples with v similar r,g,b
                 ttl = 0
                 for c in cols:
                     if (abs(c[1][0] - c[1][1]) < 5 and abs(c[1][1] - c[1][2]) < 5):
                         ttl += c[0]
                 if ttl > 650000:
-                    return self.validationInfo.check('quality', 1,1, result)
+                    return self.validationInfo.check('quality', 1, 1, result)
                 else:
-                    return self.validationInfo.check('quality', 1,0, result)
+                    return self.validationInfo.check('quality', 1, 0, result)
 
             return result
         except:

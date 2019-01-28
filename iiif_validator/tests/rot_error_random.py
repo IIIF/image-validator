@@ -1,5 +1,6 @@
 from .test import BaseTest
 
+
 class Test_Rot_Error_Random(BaseTest):
     label = 'Random rotation gives 400'
     level = 1

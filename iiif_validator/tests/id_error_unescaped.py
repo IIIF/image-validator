@@ -1,5 +1,6 @@
 from .test import BaseTest
 
+
 class Test_Id_Error_Unescaped(BaseTest):
     label = 'Unescaped identifier gives 400'
     level = 1
@@ -14,6 +15,6 @@ class Test_Id_Error_Unescaped(BaseTest):
             url = url.replace('%5D', ']')
             error = result.fetch(url)
             self.validationInfo.check('status', result.last_status, [400, 404], result)
-            return result   
+            return result
         except:
             raise

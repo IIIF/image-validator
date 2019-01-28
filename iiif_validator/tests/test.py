@@ -1,5 +1,6 @@
 """BaseTest class for tests and ValidationError exception."""
 
+
 class BaseTest(object):
     label = "test name"
     level = 0
@@ -14,8 +15,8 @@ class BaseTest(object):
     def make_info(cls, version):
         # print cls.label, version, cls.versions
         if version and not version in cls.versions:
-            return {}            
-        data = {'label': cls.label, 'level':cls.level, 'versions': cls.versions, 'category': cls.category}
+            return {}
+        data = {'label': cls.label, 'level': cls.level, 'versions': cls.versions, 'category': cls.category}
         if type(cls.level) == dict:
             # If not version, need to make a choice... make it max()
             if version:
@@ -41,13 +42,9 @@ class ValidatorError(Exception):
             self.url = None
             self.headers = None
             self.status = None
-                
+
     def __str__(self):
         if self.message:
             return "Expected %s for %s; Got: %r".format(self.message, self.type, self.got)
         else:
             return "Expected %r for %s; Got: %r".format(self.expected, self.type, self.got)
-
-
-
-        

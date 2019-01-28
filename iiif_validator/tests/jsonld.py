@@ -6,6 +6,7 @@ except ImportError:
     # fall back to python2
     from urllib2 import Request, urlopen, HTTPError
 
+
 class Test_Jsonld(BaseTest):
     label = 'JSON-LD Media Type'
     level = 1
@@ -19,7 +20,7 @@ class Test_Jsonld(BaseTest):
         try:
             r = Request(url, headers=hdrs)
             wh = urlopen(r)
-            img = wh.read()   
+            img = wh.read()
             wh.close()
         except HTTPError as e:
             wh = e

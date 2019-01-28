@@ -1,5 +1,6 @@
 from .test import BaseTest
 
+
 class Test_Cors(BaseTest):
     label = 'Cross Origin Headers'
     level = 1
@@ -8,9 +9,9 @@ class Test_Cors(BaseTest):
     validationInfo = None
 
     def run(self, result):
-        info = result.get_info();
+        info = result.get_info()
         cors = ''
-        for k,v in result.last_headers.items():
+        for k, v in result.last_headers.items():
             if k.lower() == 'access-control-allow-origin':
                 cors = v
                 break

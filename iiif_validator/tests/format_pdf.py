@@ -1,5 +1,7 @@
 from .test import BaseTest, ValidatorError
-import magic, urllib
+import magic
+import urllib
+
 
 class Test_Format_Pdf(BaseTest):
     label = 'PDF format'

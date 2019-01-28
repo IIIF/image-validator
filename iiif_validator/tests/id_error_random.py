@@ -1,6 +1,7 @@
 from .test import BaseTest
 import uuid
 
+
 class Test_Id_Error_Random(BaseTest):
     label = 'Random identifier gives 404'
     level = 1

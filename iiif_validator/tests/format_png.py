@@ -1,5 +1,6 @@
 from .test import BaseTest
 
+
 class Test_Format_Png(BaseTest):
     label = 'PNG format'
     level = 2

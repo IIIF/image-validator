@@ -20,10 +20,10 @@ class Test_Baseurl_Redirect(BaseTest):
         try:
             r = Request(url)
             wh = urlopen(r)
-            img = wh.read()   
+            img = wh.read()
             wh.close()
         except HTTPError as e:
-            wh = e        
+            wh = e
 
         u = wh.geturl()
         if u == url:
@@ -33,5 +33,3 @@ class Test_Baseurl_Redirect(BaseTest):
             # we must have redirected if our url is not what was requested
             result.tests.append('redirect')
             return result
-
-

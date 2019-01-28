@@ -1,5 +1,6 @@
 from .test import BaseTest
 
+
 class Test_Format_Error_Random(BaseTest):
     label = 'Random format gives 400'
     level = 1

@@ -1,5 +1,6 @@
 from .test import BaseTest
 
+
 class Test_Format_Gif(BaseTest):
     label = 'GIF format'
     level = 3
