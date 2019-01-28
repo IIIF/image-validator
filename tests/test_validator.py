@@ -22,7 +22,7 @@ class TestAll(unittest.TestCase):
     def test03_image_api_init(self):
         """Image API class initialization."""
         ia = ImageAPI(identifier='abc', server='http://example.org/')
-        self.assertEqual(ia.version, '2.0')
+        self.assertEqual(ia.version, '2.1')
 
     def test04_validator(self):
         """Validator class initialization."""
