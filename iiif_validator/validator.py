@@ -367,7 +367,7 @@ class Validator(object):
             sys.stderr.flush()
 
     def handle_test(self, testname):
-        version = request.query.get('version', '2.0')
+        version = request.query.get('version', '2.1')
         info = ValidationInfo()
         testSuite = TestSuite(info)
 

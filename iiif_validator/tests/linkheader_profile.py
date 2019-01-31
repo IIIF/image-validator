@@ -23,7 +23,7 @@ class Test_Linkheader_Profile(BaseTest):
             raise ValidatorError('profile', profile, 'URI', result)
         elif result.version == "1.1" and not profile.startswith('http://library.stanford.edu/iiif/image-api/1.1/compliance.html'):
             raise ValidatorError('profile', profile, 'URI', result)
-        elif result.version == "2.0" and not profile.startswith('http://iiif.io/api/image/2/'):
+        elif result.version in ("2.0", "2.1") and not profile.startswith('http://iiif.io/api/image/2/'):
             raise ValidatorError('profile', profile, 'URI', result)
         else:
             result.tests.append('linkheader')
