@@ -19,14 +19,14 @@ Installation
 ------------
 
 Installation from pypi
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
 
 The following should install scripts, library, and the necessary dependencies::
 
    pip install iiif-validator
 
 Manual installation
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 
 Installation from `source code
 <https://github.com/IIIF/image-validator>` can de done with::
@@ -46,14 +46,14 @@ Command line validator, ``iiif-validate.py``
 Then for an image served at ``http://localhost:8000/prefix/image_id``
 the validator can be run with::
 
-    iiif-validate.py -s localhost:8000 -p prefix -i image_id --version=2.0 -v
+    iiif-validate.py -s localhost:8000 -p prefix -i image_id --version=2.1 -v
 
 or similar to validate server with the test image. Use
 ``iiif-validate -h`` for parameter details.
 
 
 Use with Travis CI
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
 
 To install dependencies for this code the following lines must
 be present in the ``install:`` section of ``.travis.yml``::
@@ -85,43 +85,50 @@ The primary installation of the validator server is on the `IIIF
 `<http://iiif.io/api/image/validator/>`_.
 
 Stand-alone server
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
 
-The validator server runs at `<http://localhost:8080/>`_ by
-default, the URI path is the test name and then the query
-parameters give the details of the server and image to
-be tested. The URI pattern is::
+The validator runs at `<http://localhost:8080/>`_ by default
+and can be used to validate output from an image server. Using
+the *iiif_testserver.py*, which defaults to
+`<http://localhost:8000/>`_ and the *screen* utility::
 
-    http://localhost:8080/{test_name}?server={server}&prefix={prefix}&identifer={id}&version={api_version}
+    pip install iiif
+    screen -d -m iiif_testserver.py --image-dir {/path/to/images/dir}
+    screen -d -m iiif-validator.py
+    iiif-validate.py --scheme={scheme} -s {host:port} -p {prefix} --level={level} --version={version} -i {identifier} --test={test} --verbose
 
-As an example, if the test server <https://pypi.python.org/pypi/iiif> is installed and run locally::
+For example::
 
-    easy_install iiif
-    iiif_testserver.py
+  iiif-validate.py --scheme=http -s localhost:8000 -p 2.1_pil --level=2 -i 67352ccc-d1b0-11e1-89ae-279075081939 --test=info_json --verbose
 
-which will set up a server at `<http://localhost:8000/>`_ and write the log of accesses to STDOUT. The one can run validation tests against this with requests like `<http://localhost:8080/info_json?server=localhost:8000&prefix=/2.0_pil_none&identifier=67352ccc-d1b0-11e1-89ae-279075081939.png&version=2.0>`_ which tests the `info.json` response and gives JSON output (pretty formatted here)::
+    [1] test info_json PASS
+      url: ['http://localhost:8000/2.1_pil/67352ccc-d1b0-11e1-89ae-279075081939/info.json']
+      tests: ['required-field: width', 'required-field: height', 'type-is-int: height', 
+              'type-is-int: width', 'required- field: @id', 'type-is-uri: @id', '@id is correct URI', 
+              'required-field: @context', 'correct-context', 'required-field: protocol', 
+              'correct-protocol', 'required-field: profile', 'is-list', 'profile-compliance', 
+              'is-list', 'is-object', 'required-field: scaleFactors', 'required-field: width', 
+              'type-is-int: width']
+    
+    Done (1 tests, 0 failures)
 
-    {
-      "test": "info_json",
-      "status": "success",
-      "tests": ["required-field: width", "required-field: height", "type-is-int: height", "type-is-int: width", "required-field: @id", "type-is-uri: @id", "@id is correct URI", "required-field: @context", "correct-context", "required-field: protocol", "correct-protocol", "required-field: profile", "is-list", "profile-compliance", "is-list", "is-object", "required-field: scaleFactors", "required-field: width", "type-is-int: width"],
-      "url": ["http://localhost:8000/2.0_pil_none/67352ccc-d1b0-11e1-89ae-279075081939.png/info.json"],
-      "label": "Check Image Information"
-    }
+Different *size* and *region* example::
 
-and `<http://localhost:8080/rot_mirror?server=localhost:8000&prefix=/2.0_pil_none&identifier=67352ccc-d1b0-11e1-89ae-279075081939.png&version=2.0>`_ which tests mirroring and will give JSON output (again pretty formatted)::
+    iiif-validate.py --scheme=http -s localhost:8000 -p 2.1_pil --level=2 -i 67352ccc-d1b0-11e1-89ae-279075081939 --test=size_region --verbose
 
-    {
-      "test": "rot_mirror",
-      "status": "success",
-      "tests": ["9,0:True", "0,9:True"],
-      "url": ["http://localhost:8000/2.0_pil_none/67352ccc-d1b0-11e1-89ae-279075081939.png/full/full/!0/default.jpg"],
-      "label": "Mirroring"
-    }
+    [1] test size_region PASS
+      url: ['http://localhost:8000/2.1_pil/67352ccc-d1b0-11e1-89ae-279075081939/800,200,100,100/52,52/0/default.jpg', 
+            'http://localhost:8000/2.1_pil/67352ccc-d1b0-11e1-89ae-279075081939/600,700,100,100/83,83/0/default.jpg', 
+            'http://localhost:8000/2.1_pil/67352ccc-d1b0-11e1-89ae-279075081939/100,500,100,100/42,42/0/default.jpg', 
+            'http://localhost:8000/2.1_pil/67352ccc-d1b0-11e1-89ae-279075081939/200,600,100,100/57,57/0/default.jpg',
+            'http://localhost:8000/2.1_pil/67352ccc-d1b0-11e1-89ae-279075081939/100,100,100,100/42,42/0/default.jpg']
+      tests: ['8,2:True', '6,7:True', '1,5:True', '2,6:True', '1,1:True']
+    
+    Done (1 tests, 0 failures)
 
 
 Validator server under WSGI
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 *need docs here*
 
@@ -140,25 +147,3 @@ In addition, the Vagrant configuration runs the validator as a WSGI application 
 
 Editing this README
 -------------------
-
-This README is in reStructuredText and not gfm because that is what pypi will render. An editor like `<http://rst.ninjs.org/>`_ is useful for editing/checking interactively.
-
-License
--------
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-   http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-
-See ``LICENSE.txt``.
-
-Data included with this software, such as the test image files in the ``html`` directory, may be freely reused under `CC0
-<https://creativecommons.org/publicdomain/zero/1.0/>`_
