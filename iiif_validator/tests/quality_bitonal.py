@@ -9,7 +9,7 @@ class Test_Quality_Bitonal(BaseTest):
 
     def run(self, result):
         try:
-            params = {'quality': 'bitonal', 'format':'png'}
+            params = {'quality': 'bitonal'}
             img = result.get_image(params)
 
             cols = img.getcolors()
