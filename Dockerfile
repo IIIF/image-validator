@@ -1,4 +1,4 @@
-FROM httpd:2.4.33
+FROM httpd:2.4.39
 
 RUN apt-get update
 RUN apt-get -y install python3.4 python3-pip libapache2-mod-wsgi-py3 libxml2-dev libxslt1-dev lib32z1-dev libjpeg-dev libmagic-dev  python-dev vim
@@ -15,6 +15,8 @@ RUN mkdir /var/run/httpd
 RUN ln -s /var/run/httpd /etc/httpd/run
 RUN mkdir /var/www
 RUN ln -s /usr/local/apache2/htdocs /var/www/html
+COPY html/ /var/www/html/
+RUN sed -i 's/http:\/\/iiif.io//g' /var/www/html/js/*.js
 RUN ln -s /usr/local/apache2/logs /var/log/httpd
 RUN ln -s /var/log/httpd /etc/httpd/logs
 RUN mkdir /etc/httpd/conf.d

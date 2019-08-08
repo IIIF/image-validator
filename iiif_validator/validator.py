@@ -287,18 +287,21 @@ class ImageAPI(object):
         if 'region' not in params:
             params['region'] = 'full'
         if 'size' not in params:
-            params['size'] = 'full'
+            if self.version == "3.0":
+                params['size'] = 'max'
+            else:
+                params['size'] = 'full'
         if 'rotation' not in params:
             params['rotation'] = '0'
         if 'quality' not in params:
-            if self.version == "2.0":
+            if self.version in ("2.0", "3.0"):
                 params['quality'] = 'default'
             else:
                 params['quality'] = 'native'        
-        elif params['quality'] == 'grey' and self.version == "2.0":
+        elif params['quality'] == 'grey' and self.version in ("2.0", "3.0"):
             # en-us in 2.0+
             params['quality'] = 'gray'
-        if 'format' not in params and self.version == "2.0":
+        if 'format' not in params and self.version in ("2.0", "3.0"):
             # format is required in 2.0+
             params['format'] = 'jpg'
 
@@ -417,7 +420,7 @@ class Validator(object):
             testSuite.run_test(testname, result)
             if result.exception:
                 e = result.exception
-                info = {'test' : testname, 'status': 'error', 'url':result.urls, 'got':e.got, 'expected': e.expected, 'type': e.type}
+                info = {'test' : testname, 'status': 'error', 'url':result.urls, 'got':e.got, 'expected': e.expected, 'type': e.type, 'message': e.message}
             else:
                 info = {'test' : testname, 'status': 'success', 'url':result.urls, 'tests':result.tests}
             if result.test_info:
