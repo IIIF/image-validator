@@ -16,9 +16,9 @@ class Test_Baseurl_Redirect(BaseTest):
 
     def run(self, result):
         url = result.make_info_url()
-        url = url.replace('/info.json', '')
+        baseUrl = url.replace('/info.json', '')
         try:
-            r = Request(url)
+            r = Request(baseUrl)
             wh = urlopen(r)
             img = wh.read()   
             wh.close()
@@ -28,7 +28,7 @@ class Test_Baseurl_Redirect(BaseTest):
         u = wh.geturl()
         if u == url:
             # we didn't redirect
-            raise ValidatorError('redirect', '', 'URI', result)
+            raise ValidatorError('redirect', '', 'URI', result, 'Failed to redirect from {} to {}.'.format(u, url))
         else:
             # we must have redirected if our url is not what was requested
             result.tests.append('redirect')
