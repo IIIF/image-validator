@@ -4,3 +4,4 @@
 -e git+https://github.com/lxml/lxml#egg=lxml
 # LXML requires Cython>=0.20
 Cython>=0.20
+mock

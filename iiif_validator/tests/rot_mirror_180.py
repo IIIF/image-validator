@@ -4,7 +4,7 @@ class Test_Rot_Mirror_180(BaseTest):
     label = 'Mirroring plus 180 rotation'
     level = 3
     category = 4
-    versions = [u'2.0']
+    versions = [u'2.0', u'3.0']
     validationInfo = None
 
     def run(self, result):

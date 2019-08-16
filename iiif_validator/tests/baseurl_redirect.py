@@ -11,14 +11,14 @@ class Test_Baseurl_Redirect(BaseTest):
     label = 'Base URL Redirects'
     level = 1
     category = 7
-    versions = [u'2.0']
+    versions = [u'2.0', u'3.0']
     validationInfo = None
 
     def run(self, result):
         url = result.make_info_url()
-        baseUrl = url.replace('/info.json', '')
+        url = url.replace('/info.json', '')
         try:
-            r = Request(baseUrl)
+            r = Request(url)
             wh = urlopen(r)
             img = wh.read()   
             wh.close()
@@ -28,7 +28,7 @@ class Test_Baseurl_Redirect(BaseTest):
         u = wh.geturl()
         if u == url:
             # we didn't redirect
-            raise ValidatorError('redirect', '', 'URI', result, 'Failed to redirect from {} to {}.'.format(u, url))
+            raise ValidatorError('redirect', u, '{}/info.json'.format(url), result, 'Failed to redirect from {} to {}/info.json. Response code {}'.format(u, url, wh.getcode()))
         else:
             # we must have redirected if our url is not what was requested
             result.tests.append('redirect')
