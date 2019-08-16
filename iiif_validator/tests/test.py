@@ -43,9 +43,9 @@ class ValidatorError(Exception):
                 
     def __str__(self):
         if self.message:
-            return "Expected %s for %s; Got: %r".format(self.message, self.type, self.got)
+            return "Expected {} for {}; Got: {} ({})".format(self.expected, self.type, self.got, self.message)
         else:
-            return "Expected %r for %s; Got: %r".format(self.expected, self.type, self.got)
+            return "Expected {} for {}; Got: {}".format(self.expected, self.type, self.got)
 
 
 

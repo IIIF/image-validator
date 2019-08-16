@@ -5,7 +5,7 @@ class Test_Format_Webp(BaseTest):
     label = 'WebP format'
     level = 3
     category = 6
-    versions = [u'2.0']
+    versions = [u'2.0', u'3.0']
     validationInfo = None
 
     def run(self, result):

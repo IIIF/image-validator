@@ -1,0 +1,29 @@
+{
+    "@context": "http://iiif.io/api/image/3/context.json",
+    "id": "http://example.com/iiif/image/67352ccc-d1b0-11e1-89ae-279075081939",
+    "type": "ImageService3",
+    "profile": "level1",
+    "protocol": "http://iiif.io/api/image",
+    "width": 1000,
+    "height": 1000,
+    "tiles": [
+        {
+            "width": 512,
+            "height": 512,
+            "scaleFactors": [ 1 ]
+        }
+    ],
+    "service": [{
+        "@id": "http://example.com/auth/1",
+        "profile": "http://iiif.io/api/auth/1/login"
+    }],  
+    "extraFormats": [
+        "jpg",
+        "png"
+    ],
+    "extraQualities": [
+        "default",
+        "color",
+        "gray"
+    ]
+}

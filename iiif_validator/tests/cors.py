@@ -4,7 +4,7 @@ class Test_Cors(BaseTest):
     label = 'Cross Origin Headers'
     level = 1
     category = 7
-    versions = [u'1.0', u'1.1', u'2.0']
+    versions = [u'1.0', u'1.1', u'2.0', u'3.0']
     validationInfo = None
 
     def run(self, result):

@@ -82,12 +82,12 @@ class ValidationInfo(object):
         val = val.replace('/', '$')
         return val
 
-    def check(self, typ, got, expected, result=None, errmsg=""):
+    def check(self, typ, got, expected, result=None, errmsg="", warning=False):
         if type(expected) == list:
             if not got in expected:
-                raise ValidatorError(typ, got, expected, result, errmsg)
+                raise ValidatorError(typ, got, expected, result, errmsg, warning)
         elif got != expected:
-            raise ValidatorError(typ, got, expected, result, errmsg)
+            raise ValidatorError(typ, got, expected, result, errmsg, warning)
         if result:
             result.tests.append(typ)
         return 1
@@ -420,7 +420,7 @@ class Validator(object):
             testSuite.run_test(testname, result)
             if result.exception:
                 e = result.exception
-                info = {'test' : testname, 'status': 'error', 'url':result.urls, 'got':e.got, 'expected': e.expected, 'type': e.type, 'message': e.message}
+                info = {'test' : testname, 'status': 'error', 'url':result.urls, 'got':e.got, 'expected': e.expected, 'type': e.type, 'message': e.message, 'warning': e.warning}
             else:
                 info = {'test' : testname, 'status': 'success', 'url':result.urls, 'tests':result.tests}
             if result.test_info:

@@ -10,7 +10,7 @@ class Test_Jsonld(BaseTest):
     label = 'JSON-LD Media Type'
     level = 1
     category = 7
-    versions = [u'2.0']
+    versions = [u'2.0', u'3.0']
     validationInfo = None
 
     def run(self, result):

@@ -2,3 +2,4 @@ lxml
 bottle
 python-magic
 pillow
+mock

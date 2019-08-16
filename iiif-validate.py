@@ -71,7 +71,7 @@ for testname in tests:
             e = result.exception
             bad += 1
             logging.error("%s FAIL"%test_str)
-            logging.error("  url: %s\n  got: %s\n  expected: %s\n  type: %s\n  message: %s"%(result.urls,e.got,e.expected,e.type, e.message))
+            logging.error("  url: %s\n  got: %s\n  expected: %s\n  type: %s\n  message: %s\n  Is Warning?: %s"%(result.urls,e.got,e.expected,e.type, e.message, e.warning))
         else:
             logging.warning("%s PASS"%test_str)
             logging.info("  url: %s\n  tests: %s\n"%(result.urls,result.tests))

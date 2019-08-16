@@ -1,0 +1,30 @@
+{
+  "@context": "http://iiif.io/api/image/2/context.json",
+  "@id": "http://iiif.io/api/image/2.0/example/reference/67352ccc-d1b0-11e1-89ae-279075081939",
+  "protocol": "http://iiif.io/api/image",
+  "width": 1000,
+  "height": 1000,
+    "tiles": [
+    {
+      "height": 512,
+      "scaleFactors": [
+        1
+      ],
+      "width": 512
+    }
+  ],
+  "profile": [
+    "http://iiif.io/api/image/2/level1.json",
+    {
+      "formats": [
+        "jpg",
+        "png"
+      ],
+      "qualities": [
+        "default",
+        "color",
+        "gray"
+      ]
+    }
+  ]
+}
