@@ -1,8 +1,10 @@
 iiif_validator change log
 =========================
 
-v1.0.5 ????-??-??
-  * ...
+v1.0.5 2019-08-20
+  * Add support for IIIF version 3.0 <https://github.com/IIIF/image-validator/pull/70>
+  * Removed PNG requirement for quality_bitonal test <https://github.com/IIIF/image-validator/pull/68>
+  * Removed support for EOL python 2.6 <https://github.com/IIIF/image-validator/pull/58>
 
 v1.0.4 2017-09-08
   * Add license information <https://github.com/IIIF/image-validator/pull/56>
