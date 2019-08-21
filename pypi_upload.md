@@ -2,9 +2,7 @@
 Updating iiif-validator on pypi
 ===============================
 
-Notes to remind @zimeon...
-
-iiif-validator is at <https://pypi.python.org/pypi/iiif-validator>
+iiif-validator is at <https://pypi.org/project/iiif-validator/>
 
 Putting up a new version
 ------------------------
@@ -28,6 +26,9 @@ Putting up a new version
     python setup.py sdist upload
     ```
 
-   9. Then check on PyPI at <https://pypi.python.org/pypi/iiif-validator>
+FIXME - should change to use `twine` for upload per https://pypi.org/project/twine/
+
+
+   9. Then check on PyPI at <https://pypi.org/project/iiif-validator/>
   10. Finally, back on working branch start new version number by editing `iiif_validator/_version.py` and `CHANGES.md`
 
