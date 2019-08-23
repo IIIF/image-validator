@@ -30,7 +30,7 @@ class Test_Info_Json(BaseTest):
                 idField = '@id'
                 if result.version[0] == '3':
                     idField = 'id'
-                self.validationInfo.check('required-field: {}'.format(idField), idField in info, True, result)
+                self.validationInfo.check('required-field: {}'.format(idField), idField in info, True, result, 'info.json is missing required field `{}`'.format(idField))
                 self.validationInfo.check('type-is-uri: {}'.format(idField), info[idField].startswith('http'), True, result)
                 # Check id is same as request URI
                 self.validationInfo.check('{} is correct URI'.format(idField), info[idField] == result.last_url.replace('/info.json', ''), True, result, 'Found: {} Expected: {}'.format(info[idField], result.last_url.replace('/info.json', '')))

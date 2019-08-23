@@ -14,5 +14,5 @@ class Test_Cors(BaseTest):
             if k.lower() == 'access-control-allow-origin':
                 cors = v
                 break
-        self.validationInfo.check('CORS', cors, '*', result)
+        self.validationInfo.check('CORS', cors, '*', result, 'Failed to get correct CORS header.')
         return result

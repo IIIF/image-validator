@@ -25,6 +25,6 @@ class Test_No_Size_Up(BaseTest):
         try:
             img = result.get_image(params)
         except:
-            self.validationInfo.check('size', result.last_status, 400, result, "In version 3.0 image should only be upscaled using the ^ notation.")
+            self.validationInfo.check('size-upscalling', result.last_status, 400, result, "In version 3.0 image should only be upscaled using the ^ notation.")
         if result.last_status == 200:
-            raise ValidatorError()
+            raise ValidatorError('size-upscalling', result.last_status, '!200', result, 'Retrieving upscailed image succeeded but should have failed as 3.0 requires the ^ for upscalling. Size: {}'.format(sizeStr))
