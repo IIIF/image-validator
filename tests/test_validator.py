@@ -46,7 +46,7 @@ class TestAll(unittest.TestCase):
             'Access-Control-Allow-Origin': ':-)'
         })
         t.run(r)
-        m.check.assert_called_with('CORS', ':-)', '*', r)
+        m.check.assert_called_with('CORS', ':-)', '*', r, 'Failed to get correct CORS header.')
 
     def test06_info(self):
         """Test info.json checks."""
