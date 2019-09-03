@@ -2,7 +2,7 @@ from .test import BaseTest, ValidatorError
 import random
 
 class Test_No_Size_Up(BaseTest):
-    label = 'Size greater than 100% should only work with the ^ notation'
+    label = '3.0 replace full with max'
     level = 0
     category = 3
     versions = [u'3.0'] 
