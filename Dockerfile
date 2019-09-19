@@ -31,7 +31,7 @@ WORKDIR /etc/httpd/
 COPY docker-files/conf.modules.d.tar.gz /tmp/
 RUN tar zxvf /tmp/conf.modules.d.tar.gz
 
-
+RUN ln -sf /dev/stdout /var/log/httpd/access_log && ln -sf /dev/stderr /var/log/httpd/error_log
 
 #RUN rm /etc/nginx/conf.d/*.conf
 #COPY .ebextensions/nginx/conf.d/*.conf /etc/nginx/conf.d/
