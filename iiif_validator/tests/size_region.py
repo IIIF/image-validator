@@ -21,7 +21,11 @@ class Test_Size_Region(BaseTest):
                 img = result.get_image(params)
                 if img.size != (s,s):
                     raise ValidatorError('size', img.size, (s,s), result)
-                ok = self.validationInfo.do_test_square(img,x,y, result)
+                try:
+                    ok = self.validationInfo.do_test_square(img,x,y, result)
+                except TypeError as error:
+                    raise ValidatorError('color-error', str(error), 'No error', result,'Failed to check colour due to {}'.format(error))
+
                 if not ok:
                     raise ValidatorError('color', 1, self.validationInfo.colorInfo[0][0], result)
             return result

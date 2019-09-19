@@ -1,4 +1,4 @@
-from .test import BaseTest
+from .test import BaseTest, ValidatorError
 
 class Test_Format_Error_Random(BaseTest):
     label = 'Random format gives 400'
@@ -8,10 +8,10 @@ class Test_Format_Error_Random(BaseTest):
     validationInfo = None
 
     def run(self, result):
+        url = result.make_url({'format': self.validationInfo.make_randomstring(3)})
         try:
-            url = result.make_url({'format': self.validationInfo.make_randomstring(3)})
             error = result.fetch(url)
             self.validationInfo.check('status', result.last_status, [400, 415, 503], result)
             return result
-        except:
-            raise
+        except Exception as error:
+            raise ValidatorError('url-check', str(error), 400, result, 'Failed to get random format from url: {}.'.format(url))

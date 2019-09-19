@@ -1,4 +1,4 @@
-from .test import BaseTest
+from .test import BaseTest, ValidatorError
 
 class Test_Id_Error_Escapedslash(BaseTest):
     label = 'Forward slash gives 404'
@@ -13,5 +13,5 @@ class Test_Id_Error_Escapedslash(BaseTest):
             error = result.fetch(url)
             self.validationInfo.check('status', result.last_status, 404, result)
             return result            
-        except:
-            raise
+        except Exception as error:
+            raise ValidatorError('url-check', str(error), 404, result, 'Failed to get random identifier from url {}.'.format(url))

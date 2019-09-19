@@ -23,6 +23,7 @@ class Test_Jsonld(BaseTest):
             wh.close()
         except HTTPError as e:
             wh = e
+            self.validationInfo.check('status', result.last_status, 200, result)
         ct = wh.headers['content-type']
         self.validationInfo.check('json-ld', ct.startswith('application/ld+json'), 1, result, "Content-Type to start with application/ld+json")
         return result

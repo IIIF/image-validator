@@ -32,13 +32,15 @@ class Test_Baseurl_Redirect(BaseTest):
                 newurl = wh.headers['Location']
             else:
                 newurl = wh.geturl()
+        except Exception as error:
+            raise ValidatorError('url-check', str(error), 301, result, 'Failed to redirect from url: {}.'.format(url))
 
         if newurl == url:
             print (wh)
             print (wh.geturl())
             print (type(wh))
             # we didn't redirect
-            raise ValidatorError('redirect', u, '{}/info.json'.format(url), result, 'Failed to redirect from {} to {}/info.json. Response code {}'.format(u, url, wh.getcode()))
+            raise ValidatorError('redirect', newurl, '{}/info.json'.format(url), result, 'Failed to redirect from {} to {}/info.json. Response code {}'.format(newurl, url, wh.getcode()))
         else:
             # we must have redirected if our url is not what was requested
             result.tests.append('redirect')
