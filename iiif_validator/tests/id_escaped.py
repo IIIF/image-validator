@@ -1,4 +1,4 @@
-from .test import BaseTest
+from .test import BaseTest, ValidatorError
 
 class Test_Id_Escaped(BaseTest):
     label = 'Escaped characters processed'
@@ -15,5 +15,5 @@ class Test_Id_Escaped(BaseTest):
             self.validationInfo.check('status', result.last_status, 200, result)
             img = result.make_image(data)
             return result
-        except:
-            raise
+        except Exception as error:
+            raise ValidatorError('url-check', str(error), 404, result, 'Failed to get random identifier from url: {}.'.format(url))

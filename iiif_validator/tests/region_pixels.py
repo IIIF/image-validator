@@ -20,7 +20,11 @@ class Test_Region_Pixels(BaseTest):
                 hw = 74
                 params = {'region' :'%s,%s,%s,%s' % (ix,iy, hw, hw)}
                 img = result.get_image(params)
-                ok = self.validationInfo.do_test_square(img,x,y, result)
+                try:
+                    ok = self.validationInfo.do_test_square(img,x,y, result)
+                except TypeError as error:
+                    raise ValidatorError('color-error', str(error), 'No error', result,'Failed to check colour due to {}'.format(error))
+
                 if ok:
                     match += 1
             if match >= 4:         
@@ -28,5 +32,5 @@ class Test_Region_Pixels(BaseTest):
             else:
                 raise ValidatorError('color', 1,0, result)
         except:
-            # self.validationInfo.check('status', result.last_status, 200, result)
+            self.validationInfo.check('status', result.last_status, 200, result)
             raise

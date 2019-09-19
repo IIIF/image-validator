@@ -1,4 +1,4 @@
-from .test import BaseTest
+from .test import BaseTest, ValidatorError
 
 class Test_Id_Basic(BaseTest):
     label = 'Image is returned'
@@ -8,11 +8,11 @@ class Test_Id_Basic(BaseTest):
     validationInfo = None
 
     def run(self, result):
+        url = result.make_url(params={})
         try:
-            url = result.make_url(params={})
             data = result.fetch(url)
             self.validationInfo.check('status', result.last_status, 200, result)
             img = result.make_image(data)
             return result
         except:
-            raise
+            raise ValidatorError('status', result.last_status, 200, result, 'Failed to retrieve url: {}'.format(url))

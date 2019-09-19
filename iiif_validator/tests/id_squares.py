@@ -9,8 +9,8 @@ class Test_Id_Squares(BaseTest):
     validationInfo = None
 
     def run(self, result):
+        url = result.make_url({'format':'jpg'})
         try:
-            url = result.make_url({'format':'jpg'})
             data = result.fetch(url)
             self.validationInfo.check('status', result.last_status, 200, result)            
             img = result.make_image(data) 
@@ -34,4 +34,4 @@ class Test_Id_Squares(BaseTest):
             else:
                 raise ValidatorError('color', 1,0, result)
         except:
-            raise
+            raise ValidatorError('status', result.last_status, 200, result, 'Failed to retrieve url: {}'.format(url))

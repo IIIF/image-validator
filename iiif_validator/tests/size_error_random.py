@@ -1,4 +1,4 @@
-from .test import BaseTest
+from .test import BaseTest, ValidatorError
 
 class Test_Size_Error_Random(BaseTest):
     label = 'Random size gives 400'
@@ -13,5 +13,5 @@ class Test_Size_Error_Random(BaseTest):
             error = result.fetch(url)
             self.validationInfo.check('status', result.last_status, 400, result)
             return result             
-        except:
-            raise
+        except Exception as error:
+            raise ValidatorError('url-check', str(error), 400, result, 'Failed to get random size with url {}.'.format(url))

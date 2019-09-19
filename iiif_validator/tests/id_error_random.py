@@ -1,4 +1,4 @@
-from .test import BaseTest
+from .test import BaseTest, ValidatorError
 import uuid
 
 class Test_Id_Error_Random(BaseTest):
@@ -14,5 +14,5 @@ class Test_Id_Error_Random(BaseTest):
             error = result.fetch(url)
             self.validationInfo.check('status', result.last_status, 404, result)
             return result
-        except:
-            raise
+        except Exception as error:
+            raise ValidatorError('url-check', str(error), 404, result, 'Failed to get random identifier from url: {}.'.format(url))

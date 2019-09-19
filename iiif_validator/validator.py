@@ -15,9 +15,10 @@ except ImportError:  # python3
 try:
     # python3
     from urllib.request import urlopen, Request, HTTPError
+    from urllib.error import URLError
 except ImportError:
     # fall back to python2
-    from urllib2 import urlopen, Request, HTTPError
+    from urllib2 import urlopen, Request, HTTPError, URLError
 try:
     from PIL import Image, ImageDraw
 except:
@@ -265,7 +266,8 @@ class ImageAPI(object):
             wh = urlopen(req, timeout=5)
         except HTTPError as e:
             wh = e
-        except:
+        except Exception as error:
+            print ('Other type of error ({}): {}'.format(type(error), error))
             raise 
         data = wh.read()
         # nasty side effect

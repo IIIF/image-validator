@@ -1,4 +1,4 @@
-from .test import BaseTest
+from .test import BaseTest, ValidatorError
 
 class Test_Region_Error_Random(BaseTest):
     label = 'Random region gives 400'
@@ -13,6 +13,5 @@ class Test_Region_Error_Random(BaseTest):
             error = result.fetch(url)
             self.validationInfo.check('status', result.last_status, 400, result)
             return result          
-        except:
-            # self.validationInfo.check('status', result.last_status, 200)
-            raise
+        except Exception as error:
+            raise ValidatorError('url-check', str(error), 404, result, 'Failed to get random region with url {}.'.format(url))

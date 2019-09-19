@@ -10,6 +10,7 @@ class Test_Linkheader_Profile(BaseTest):
     def run(self, result):
         url = result.make_url(params={})
         data = result.fetch(url)
+        self.validationInfo.check('status', result.last_status, 200, result)
         try:
             lh = result.last_headers['link']
         except KeyError:

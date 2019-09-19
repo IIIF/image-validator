@@ -1,4 +1,4 @@
-from .test import BaseTest
+from .test import BaseTest, ValidatorError
 
 class Test_Rot_Error_Random(BaseTest):
     label = 'Random rotation gives 400'
@@ -13,5 +13,5 @@ class Test_Rot_Error_Random(BaseTest):
             error = result.fetch(url)
             self.validationInfo.check('status', result.last_status, 400, result)
             return result
-        except:
-            raise
+        except Exception as error:
+            raise ValidatorError('url-check', str(error), 404, result, 'Failed to get random rotation from url: {}.'.format(url))

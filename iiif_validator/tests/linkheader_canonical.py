@@ -11,6 +11,7 @@ class Test_Linkheader_Canonical(BaseTest):
 
         url = result.make_url(params={})
         data = result.fetch(url)
+        self.validationInfo.check('status', result.last_status, 200, result)
         try:
             lh = result.last_headers['link']
         except KeyError:

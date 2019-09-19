@@ -1,4 +1,4 @@
-from .test import BaseTest
+from .test import BaseTest, ValidatorError
 
 class Test_Id_Error_Unescaped(BaseTest):
     label = 'Unescaped identifier gives 400'
@@ -15,5 +15,5 @@ class Test_Id_Error_Unescaped(BaseTest):
             error = result.fetch(url)
             self.validationInfo.check('status', result.last_status, [400, 404], result)
             return result   
-        except:
-            raise
+        except Exception as error:
+            raise ValidatorError('url-check', str(error), 400, result, 'Failed to get random identifier from url: {}.'.format(url))
