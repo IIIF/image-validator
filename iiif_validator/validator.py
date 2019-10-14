@@ -448,6 +448,9 @@ class Validator(object):
         response.headers['Access-Control-Allow-Methods'] = methods
         response.headers['Access-Control-Allow-Headers'] = headers
         response.headers['Allow'] = methods
+        # Add no cache so CloudFront doesn't cache response
+        response.headers['Cache-Control'] = 'no-cache'
+        response.headers['Pragma'] = 'no-cache'
 
     def not_implemented(self, *args, **kwargs):
         """Returns not implemented status."""
