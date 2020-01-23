@@ -81,7 +81,7 @@ class Test_Info_Json(BaseTest):
                             self.validationInfo.check('type-is-int: width', type(t['width']), int, result)
                     # extra version 3.0 checks        
                     if result.version[0] == "3":        
-                        self.validationInfo.check('correct-type', info['type'], "ImageService3", result, "Info.json missing required type of ImageService3.")
+                        self.validationInfo.check('correct-type', 'type' in info and info['type'], "ImageService3", result, "Info.json missing required type of ImageService3.")
                         self.validationInfo.check('license-renamed', 'license' in info, False, result,'license has been renamed rights in 3.0',warning=True)
                         if 'rights' in info:
                             self.validationInfo.check('type-is-uri: rights', info['rights'].startswith('http'), True, result,'Rights should be a single URI from Creative Commons, RightsStatements.org or URIs registered as extensions.')
