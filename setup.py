@@ -43,11 +43,13 @@ setup(
     long_description=open('README').read(),
     url='http://github.com/IIIF/image-api',
     install_requires=[
-        "Pillow>=3.2.0;python_version=>3.0",
-        "Pillow<7.0.0;python_version<3.0",
         "bottle>=0.12.1",
         "python-magic>=0.4.12",
         "lxml>=3.7.0"
     ],
+    extras_require={
+        ':python_version>="3.0"': ["Pillow>=3.2.0"],
+        ':python_version<"3.0"': ["Pillow<7.0.0"],
+    },
     test_suite="tests",
     tests_require=["mock"])
