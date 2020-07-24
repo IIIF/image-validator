@@ -13,6 +13,7 @@ class Test_Size_Wc(BaseTest):
             s = random.randint(450,750)
             params = {'size': '%s,' % s}
             img = result.get_image(params)
+            self.validationInfo.check('status', result.last_status, 200, result)
             self.validationInfo.check('size', img.size, (s,s), result)
 
             # Find square size
@@ -34,6 +35,5 @@ class Test_Size_Wc(BaseTest):
                 return result
             else:
                 raise ValidatorError('color', 1,0, result)          
-        except:
-            self.validationInfo.check('status', result.last_status, 200, result)
-            raise
+        except Exception as error:
+            raise ValidatorError('General error', str(error), 'No error', result,'Failed to check size due to: {}'.format(error))

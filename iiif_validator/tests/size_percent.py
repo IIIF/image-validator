@@ -35,6 +35,7 @@ class Test_Size_Percent(BaseTest):
             else:
                 raise ValidatorError('color', 1,0, result) 
            
-        except:
+        except Exception as error:
             self.validationInfo.check('status', result.last_status, 200, result)
-            raise
+
+            raise ValidatorError('General error', str(error), 'No error', result,'Failed to check size due to: {}'.format(error))

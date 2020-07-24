@@ -29,6 +29,5 @@ class Test_Size_Region(BaseTest):
                 if not ok:
                     raise ValidatorError('color', 1, self.validationInfo.colorInfo[0][0], result)
             return result
-        except:
-            self.validationInfo.check('status', result.last_status, 200, result)
-            raise
+        except Exception as error:
+            raise ValidatorError('General error', str(error), 'No error', result,'Failed to check size due to: {}'.format(error))
