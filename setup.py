@@ -49,8 +49,8 @@ setup(
     ],
     extras_require={
         ':python_version<"3.0"': ["Pillow==6.2.2"],
-        ':python_version<="3.5"': ["Pillow>=7.2.0"]
-        ':python_version>="3.6"': ["Pillow>=8.0.0"],
+        ':python_version<="3.5"': ["Pillow>=7.2.0"],
+        ':python_version>="3.6"': ["Pillow>=8.0.0"]
     },
     test_suite="tests",
     tests_require=["mock"])
