@@ -14,4 +14,4 @@ class Test_Rot_Error_Random(BaseTest):
             self.validationInfo.check('status', result.last_status, 400, result)
             return result
         except Exception as error:
-            raise ValidatorError('url-check', str(error), 404, result, 'Failed to get random rotation from url: {}.'.format(url))
+            raise ValidatorError('url-check', str(error), 400, result, 'Failed to get random rotation from url: {}.'.format(url))
