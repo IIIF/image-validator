@@ -2,5 +2,5 @@ lxml
 bottle
 python-magic
 # Versions including 7 don't support python 2.x
-pillow<7
+pillow<10
 mock
