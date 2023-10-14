@@ -178,12 +178,10 @@ class ImageAPI(object):
             elif state == "uri":
                 uri = []
                 d = data.pop(0)                
-                while d != ";":
+                while d != ">":
                     uri.append(d)
                     d = data.pop(0)
                 uri = ''.join(uri)
-                uri = uri[:-1]
-                data.insert(0, ';')
                 # Not an error to have the same URI multiple times (I think!)
                 if (uri not in links):
                     links[uri] = {}
