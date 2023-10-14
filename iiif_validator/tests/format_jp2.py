@@ -30,12 +30,10 @@ class Test_Format_Jp2(BaseTest):
         if wh.getcode() != 200:
             raise ValidatorError('format', 'http response code: {}'.format(wh.getcode()), url, result, 'Failed to retrieve jp2, got response code {}'.format(wh.getcode()))
 
-        with magic.Magic() as m:
-            print ('test')
-            info = m.id_buffer(img)
-            if not info.startswith('JPEG 2000'):
-                # Not JP2
-                raise ValidatorError('format', info, 'JPEG 2000', result)
-            else:
-                result.tests.append('format')
-                return result
+        info = magic.from_buffer(img[:1024])
+        if not info.startswith('JPEG 2000'):
+            # Not JP2
+            raise ValidatorError('format', info, 'JPEG 2000', result)
+        else:
+            result.tests.append('format')
+            return result
