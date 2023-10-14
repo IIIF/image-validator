@@ -255,9 +255,12 @@ class ImageAPI(object):
                 return uri
         return None
 
+    def get_request_origin(self):
+        return "http://iiif.io"
+
     def fetch(self, url):
         # Make it look like a real browser request
-        HEADERS = {"Origin": "http://iiif.io",
+        HEADERS = {"Origin": self.get_request_origin(),
             "Referer": "http://iiif.io/api/image/validator",
             "User-Agent": "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.1b3pre) Gecko/20081130 Minefield/3.1b3pre"}
         req = Request(url, headers=HEADERS)
