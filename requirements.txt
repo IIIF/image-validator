@@ -3,3 +3,4 @@ bottle
 python-magic
 pillow
 mock
+setuptools

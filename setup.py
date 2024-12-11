@@ -1,24 +1,27 @@
 from setuptools import setup
-# setuptools used instead of distutils.core so that
-# dependencies can be handled automatically
+import os
+from pathlib import Path
 
-# Extract version number from resync/_version.py. Here we
-# are very strict about the format of the version string
-# as an extra sanity check. (Thanks for comments in
-# http://stackoverflow.com/questions/458550/standard-way-to-embed-version-into-python-package )
-import re
-VERSIONFILE = "iiif_validator/_version.py"
-verfilestr = open(VERSIONFILE, "rt").read()
-match = re.search(r"^__version__ = '(\d\.\d.\d+(\.\d+)?)'", verfilestr,
-                  re.MULTILINE)
-if match:
-    version = match.group(1)
+this_directory = Path(__file__).parent
+if os.path.exists("version.txt"):
+    VERSION = (this_directory / "version.txt").read_text().strip()
 else:
-    raise RuntimeError("Unable to find version string in %s." % (VERSIONFILE))
+    VERSION = "0.0.0.dev0"    
+
+REQUIREMENTS = [
+    "bottle>=0.12.1",
+    "python-magic>=0.4.12",
+    "lxml>=3.7.0",
+    "Pillow>=6.2.2"
+]
+
+# Read dev requirements from requirements.txt
+with open("requirements.txt") as f:
+    DEV_REQUIREMENTS = f.read().splitlines()
 
 setup(
     name='iiif-validator',
-    version=version,
+    version=VERSION,
     packages=['iiif_validator', 'iiif_validator.tests'],
     scripts=['iiif-validator.py', 'iiif-validate.py'],
     classifiers=[
@@ -27,29 +30,23 @@ setup(
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.4",
-        "Programming Language :: Python :: 3.5",
-        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
         "Topic :: Internet :: WWW/HTTP",
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Environment :: Web Environment"
     ],
+    python_requires='>=3',
     author='IIIF Contributors',
     author_email='simeon.warner@cornell.edu',
     description='IIIF Image API Validator',
     long_description=open('README').read(),
-    url='http://github.com/IIIF/image-api',
-    install_requires=[
-        "bottle>=0.12.1",
-        "python-magic>=0.4.12",
-        "lxml>=3.7.0"
-    ],
+    long_description_content_type='text/markdown',
+    url='https://github.com/IIIF/image-validator',
+    install_requires=REQUIREMENTS,
     extras_require={
-        ':python_version>="3.0"': ["Pillow>=3.2.0"],
-        ':python_version<"3.0"': ["Pillow==6.2.2"],
-    },
-    test_suite="tests",
-    tests_require=["mock"])
+        "dev": DEV_REQUIREMENTS
+    })
