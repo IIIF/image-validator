@@ -2,11 +2,11 @@
 IIIF Validator
 ==============
 
-.. image:: https://travis-ci.org/IIIF/image-validator.svg?branch=master
-  :target: https://travis-ci.org/IIIF/image-validator
+.. image:: https://github.com/github/docs/actions/workflows/test.yml/badge.svg
+  :target: https://github.com/IIIF/image-validator/actions
     
-.. image:: https://coveralls.io/repos/github/IIIF/image-validator/badge.svg?branch=master
-  :target: https://coveralls.io/github/IIIF/image-validator?branch=master
+.. image:: https://coveralls.io/repos/github/IIIF/image-validator/badge.svg?branch=main
+  :target: https://coveralls.io/github/IIIF/image-validator?branch=main
 
 
 This validator supports the same validations that are available on the
