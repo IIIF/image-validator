@@ -14,20 +14,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Create ZIP deployment package
         run: zip -r ${{github.run_id}}.zip ./
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
           aws-region: "us-east-1"
 
       - name: Upload package to S3 bucket
-        run: aws s3 cp ${{github.run_id}}.zip s3://$BUCKET/iiif-image-validator/MyApp/
+        run: aws s3 cp ${{github.run_id}}.zip s3://$BUCKET/iiif-image-validator/MyApp/ --sse aws:kms
 
       - name: Create new ElasticBeanstalk Application Version
         run: |
