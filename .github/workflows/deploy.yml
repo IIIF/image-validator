@@ -38,5 +38,6 @@ jobs:
           --version-label "ver-${{ github.sha }}" \
           --description "commit-sha-${{ github.sha }}"
 
+    # deploy application
       - name: Deploy new ElasticBeanstalk Application Version
         run: aws elasticbeanstalk update-environment --environment-name $ELASTIC_BEANSTALK_ENV_NAME --version-label "ver-${{ github.sha }}"
