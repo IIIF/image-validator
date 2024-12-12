@@ -1,5 +1,5 @@
 lxml
-bottle
+bottle<0.13
 python-magic
 pillow
 mock
