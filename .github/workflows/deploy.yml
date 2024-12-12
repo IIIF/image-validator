@@ -16,6 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+        # creating zip file
       - name: Create ZIP deployment package
         run: zip -r ${{github.run_id}}.zip ./
 
