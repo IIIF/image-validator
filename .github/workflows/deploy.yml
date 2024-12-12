@@ -26,6 +26,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
           aws-region: "us-east-1"
 
+    # This bucket needs to be encrypted 
       - name: Upload package to S3 bucket
         run: aws s3 cp ${{github.run_id}}.zip s3://$BUCKET/iiif-image-validator/MyApp/ --sse aws:kms
 
