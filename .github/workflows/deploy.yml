@@ -33,7 +33,7 @@ jobs:
         run: |
           aws elasticbeanstalk create-application-version \
           --application-name $ELASTIC_BEANSTALK_NAME  \
-          --source-bundle S3Bucket=$BUCKET, S3Key="iiif-image-validator/MyApp/${{github.run_id}}.zip" \
+          --source-bundle S3Bucket=$BUCKET,S3Key="iiif-image-validator/MyApp/${{github.run_id}}.zip" \
           --version-label "ver-${{ github.sha }}" \
           --description "commit-sha-${{ github.sha }}"
 
