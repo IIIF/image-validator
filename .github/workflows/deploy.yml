@@ -7,6 +7,7 @@ on:
 env:
   ELASTIC_BEANSTALK_NAME: iiif-website-validators
   ELASTIC_BEANSTALK_ENV_NAME: iiif-image-validator-python-3
+  # Bucket where source is stored for ElasticBeanstalk
   BUCKET: codepipeline-us-east-1-740788099428
 
 jobs:
