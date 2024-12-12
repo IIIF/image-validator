@@ -19,6 +19,7 @@ jobs:
       - name: Create ZIP deployment package
         run: zip -r ${{github.run_id}}.zip ./
 
+        # Configuring credentials
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
