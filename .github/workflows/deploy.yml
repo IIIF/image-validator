@@ -2,7 +2,7 @@ name: deploy-to-eb
 
 on:
   push:
-    branches: [ deploy ]
+    branches: [ main ]
 
 env:
   ELASTIC_BEANSTALK_NAME: iiif-website-validators
