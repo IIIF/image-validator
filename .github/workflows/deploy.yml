@@ -1,0 +1,46 @@
+name: deploy-to-eb
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  ELASTIC_BEANSTALK_NAME: iiif-website-validators
+  ELASTIC_BEANSTALK_ENV_NAME: iiif-image-validator-python-3
+  # Bucket where source is stored for ElasticBeanstalk
+  BUCKET: codepipeline-us-east-1-740788099428
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+        # creating zip file
+      - name: Create ZIP deployment package
+        run: zip -r ${{github.run_id}}.zip ./
+
+        # Configuring credentials
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
+          aws-region: "us-east-1"
+
+    # This bucket needs to be encrypted 
+      - name: Upload package to S3 bucket
+        run: aws s3 cp ${{github.run_id}}.zip s3://$BUCKET/iiif-image-validator/MyApp/ --sse aws:kms
+
+      - name: Create new ElasticBeanstalk Application Version
+        run: |
+          aws elasticbeanstalk create-application-version \
+          --application-name $ELASTIC_BEANSTALK_NAME  \
+          --source-bundle S3Bucket=$BUCKET,S3Key="iiif-image-validator/MyApp/${{github.run_id}}.zip" \
+          --version-label "ver-${{ github.sha }}" \
+          --description "commit-sha-${{ github.sha }}"
+
+    # deploy application
+      - name: Deploy new ElasticBeanstalk Application Version
+        run: aws elasticbeanstalk update-environment --environment-name $ELASTIC_BEANSTALK_ENV_NAME --version-label "ver-${{ github.sha }}"

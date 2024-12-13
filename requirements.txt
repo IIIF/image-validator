@@ -4,3 +4,4 @@ python-magic
 pillow
 mock
 setuptools
+uwsgi
