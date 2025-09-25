@@ -1,19 +1,32 @@
-from .test import BaseTest, ValidatorError
+from .test import (
+    ValidationTest,
+    ComplianceLevel,
+    TestCategory,
+    IIIFVersion,
+    TargetServer,
+    ValidationFailure,
+    ValidationSuccess,
+    make_request,
+)
 
-class Test_Id_Escaped(BaseTest):
-    label = 'Escaped characters processed'
-    level = 1
-    category = 1
-    versions = [u'1.0', u'1.1', u'2.0', u'3.0']
-    validationInfo = None
 
-    def run(self, result):
-        try:
-            idf = result.identifier.replace('-', '%2D')
-            url = result.make_url({'identifier':idf})
-            data = result.fetch(url)
-            self.validationInfo.check('status', result.last_status, 200, result)
-            img = result.make_image(data)
-            return result
-        except Exception as error:
-            raise ValidatorError('url-check', str(error), 404, result, 'Failed to get random identifier from url: {}.'.format(url))
+class CorrectlyHandlesEscapedIdentifier(ValidationTest):
+    name = "Correctly handles escaped identifier"
+    compliance_level = ComplianceLevel.LEVEL_1
+    category = TestCategory.INFO
+    versions = [IIIFVersion.V2, IIIFVersion.V3]
+
+    @staticmethod
+    def run(server: TargetServer) -> ValidationFailure | ValidationSuccess:
+        escaped_id = server.validation_id.replace("-", "%2D")
+        url = f"{server.base_url}/{escaped_id}/info.json"
+        resp = make_request(url)
+        if resp.status == 200:
+            return ValidationSuccess(details="Returned 200 for escaped identifier")
+        else:
+            return ValidationFailure(
+                url=url,
+                expected="HTTP Status 200",
+                received=f"HTTP Status {resp.status}",
+                details="Got unexpected status code for escapedidentifier",
+            )

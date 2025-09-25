@@ -3,9 +3,10 @@
 /.eggs
 /build
 /dist
-/iiif_validator.egg-info
+*.egg-info
 *.pyc
 *~
 .tox
 .coverage
 *.swp
+.vscode

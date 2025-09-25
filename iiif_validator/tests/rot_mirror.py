@@ -1,35 +1,50 @@
-from .test import BaseTest, ValidatorError
+from .test import (
+    ValidationTest,
+    ComplianceLevel,
+    TestCategory,
+    IIIFVersion,
+    TargetServer,
+    ValidationFailure,
+    ValidationSuccess,
+    ImageAPIRequest,
+    get_image,
+    get_expected_image,
+    compare_images,
+)
 
 
-class Test_Rot_Mirror(BaseTest):
-    label = 'Mirroring'
-    level = 3
-    category = 4
-    versions = [u'2.0', u'3.0']
-    validationInfo = None
+class RotationMirrorTest(ValidationTest):
+    name = "Mirroring"
+    compliance_level = ComplianceLevel.OPTIONAL
+    category = TestCategory.ROTATION
+    versions = [IIIFVersion.V2, IIIFVersion.V3]
+    extra_name = "mirroring"
 
-    def run(self, result):
+    @staticmethod
+    def run(server: TargetServer) -> ValidationSuccess | ValidationFailure:
+        request = ImageAPIRequest.of(rotation="!0")
         try:
-            params = {'rotation': '!0'}
-            img = result.get_image(params)
-            s = 1000
-            if not img.size[0] in [s-1, s, s+1]:
-                raise ValidatorError('size', img.size, (s,s))  
+            transformed_img = get_image(server, request)
+            expected_img = get_expected_image()
 
-            #0,0 vs 9,0
-            box = (12,12,76,76)
-            sqr = img.crop(box)
-            ok = self.validationInfo.do_test_square(sqr, 9, 0, result)
-            if not ok:
-                raise ValidatorError('mirror', 1, self.validationInfo.colorInfo[9][9], result)
+            # !0 is a horizontal flip
+            expected_transformed_img = expected_img.flip("horizontal")
 
-            # 9,9 vs 0,9
-            box = (912,912,976,976)
-            sqr = img.crop(box)
-            ok = self.validationInfo.do_test_square(sqr, 0, 9, result)
-            if not ok:
-                raise ValidatorError('mirror', 1, self.validationInfo.colorInfo[0][0], result)             
-            return result             
-        except:
-            self.validationInfo.check('status', result.last_status, 200, result)
-            raise
+            if compare_images(transformed_img, expected_transformed_img):
+                return ValidationSuccess(details="Mirroring was successful.")
+            else:
+                url = request.url(server)
+                return ValidationFailure(
+                    url=url,
+                    expected="A correctly mirrored image.",
+                    received="An incorrectly mirrored image.",
+                    details="Image does not match the expected transformation.",
+                )
+        except Exception as e:
+            url = request.url(server)
+            return ValidationFailure(
+                url=url,
+                expected="A valid image.",
+                received=f"An error: {e}",
+                details="Request for mirrored rotation failed.",
+            )

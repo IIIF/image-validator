@@ -1,1 +1,0 @@
-web: uwsgi --http :8000 --wsgi-file iiif-validator.py --master --processes 4 --threads 2

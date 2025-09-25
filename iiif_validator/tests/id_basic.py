@@ -1,18 +1,33 @@
-from .test import BaseTest, ValidatorError
+from .test import (
+    ValidationTest,
+    ComplianceLevel,
+    TestCategory,
+    IIIFVersion,
+    TargetServer,
+    ValidationFailure,
+    ValidationSuccess,
+    ImageAPIRequest,
+    get_image_format,
+)
 
-class Test_Id_Basic(BaseTest):
-    label = 'Image is returned'
-    level = 0
-    category = 1
-    versions = [u'1.0', u'1.1', u'2.0', u'3.0']
-    validationInfo = None
 
-    def run(self, result):
-        url = result.make_url(params={})
+class ImageReturned(ValidationTest):
+    name = "Image is returned"
+    compliance_level = ComplianceLevel.LEVEL_0
+    category = TestCategory.FORMAT
+    versions = [IIIFVersion.V2, IIIFVersion.V3]
+
+    @staticmethod
+    def run(server: TargetServer) -> ValidationFailure | ValidationSuccess:
+        req = ImageAPIRequest.of()
         try:
-            data = result.fetch(url)
-            self.validationInfo.check('status', result.last_status, 200, result)
-            img = result.make_image(data)
-            return result
-        except:
-            raise ValidatorError('status', result.last_status, 200, result, 'Failed to retrieve url: {}'.format(url))
+            get_image_format(server, req)
+            return ValidationSuccess(details="Successfully received full image")
+        except Exception as e:
+            url = req.url(server)
+            return ValidationFailure(
+                url=url,
+                expected="Full JPEG image",
+                received=f"Invalid image due to error: {e}",
+                details="Server did not return an image for the validation identifier",
+            )

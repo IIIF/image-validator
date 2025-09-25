@@ -1,19 +1,33 @@
-from .test import BaseTest
+from .test import (
+    ValidationTest,
+    ComplianceLevel,
+    TestCategory,
+    IIIFVersion,
+    TargetServer,
+    ValidationFailure,
+    ValidationSuccess,
+    ImageAPIRequest,
+    get_image_format,
+)
 
-class Test_Format_Jpg(BaseTest):
-    label = 'JPG format'
-    # IIIF version and complaince level where jpg became manditory
-    level = {u'3.0': 0, u'2.0': 0, u'1.0': 1, u'1.1': 1}
-    category = 6
-    versions = [u'1.0', u'1.1', u'2.0', u'3.0']
-    validationInfo = None
 
-    def run(self, result):
-        try:
-            params = {'format': 'jpg'}
-            img = result.get_image(params)
-            self.validationInfo.check('quality', img.format, 'JPEG', result)
-            return result
-        except:
-            self.validationInfo.check('status', result.last_status, 200, result)
-            raise
+class FormatJPEG(ValidationTest):
+    name = "JPEG format"
+    compliance_level = ComplianceLevel.LEVEL_0
+    category = TestCategory.FORMAT
+    versions = [IIIFVersion.V2, IIIFVersion.V3]
+
+    @staticmethod
+    def run(server: TargetServer) -> ValidationFailure | ValidationSuccess:
+        req = ImageAPIRequest.of(format="jpg")
+        fmt = get_image_format(server, req)
+        if fmt == "jpeg":
+            return ValidationSuccess(details="Server returned a JPEG image")
+        else:
+            url = req.url(server)
+            return ValidationFailure(
+                url=url,
+                expected="JPEG image",
+                received=f"{fmt or '<none>'} image",
+                details="Server did not return a JPEG image",
+            )

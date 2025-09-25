@@ -1,37 +1,36 @@
-from .test import BaseTest, ValidatorError
-import random
+from .test import (
+    ValidationTest,
+    ComplianceLevel,
+    TestCategory,
+    IIIFVersion,
+    TargetServer,
+    ValidationFailure,
+    ValidationSuccess,
+    get_image,
+    ImageAPIRequest,
+    get_expected_image,
+    compare_images,
+)
 
-class Test_Id_Squares(BaseTest):
-    label = 'Correct image returned'
-    level = 0
-    category = 1
-    versions = [u'1.0', u'1.1', u'2.0', u'3.0']
-    validationInfo = None
 
-    def run(self, result):
-        url = result.make_url({'format':'jpg'})
-        try:
-            data = result.fetch(url)
-            self.validationInfo.check('status', result.last_status, 200, result)            
-            img = result.make_image(data) 
-            # Now test some squares for correct color
+class FullImageMatches(ValidationTest):
+    name = "Correctly serves full image"
+    compliance_level = ComplianceLevel.LEVEL_0
+    category = TestCategory.INFO
+    versions = [IIIFVersion.V2, IIIFVersion.V3]
 
-            match = 0
-            for i in range(5):
-                x = random.randint(0,9)
-                y = random.randint(0,9)
-                xi = x * 100 + 13;
-                yi = y * 100 + 13;
-                box = (xi,yi,xi+74,yi+74)
-                sqr = img.crop(box)
-                ok = self.validationInfo.do_test_square(sqr, x, y, result)
-                if ok:
-                    match += 1
-                else:
-                    error = (x,y)
-            if match >= 4:
-                return result
-            else:
-                raise ValidatorError('color', 1,0, result)
-        except:
-            raise ValidatorError('status', result.last_status, 200, result, 'Failed to retrieve url: {}'.format(url))
+    @staticmethod
+    def run(server: TargetServer) -> ValidationFailure | ValidationSuccess:
+        req = ImageAPIRequest.of()
+        given_image = get_image(server, req)
+        expected_image = get_expected_image()
+        if compare_images(given_image, expected_image):
+            return ValidationSuccess(details="Full image matches expected image")
+        else:
+            url = req.url(server)
+            return ValidationFailure(
+                url=url,
+                expected="Full image to match expected image",
+                received="Full image did not match expected image",
+                details="Full image did not match expected image",
+            )

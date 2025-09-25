@@ -1,39 +1,34 @@
-from .test import BaseTest, ValidatorError
-import magic
-try:
-    # python3
-    from urllib.request import Request, urlopen, HTTPError
-except ImportError:
-    # fall back to python2
-    from urllib2 import Request, urlopen, HTTPError
+from .test import (
+    ValidationTest,
+    ComplianceLevel,
+    TestCategory,
+    IIIFVersion,
+    TargetServer,
+    ValidationFailure,
+    ValidationSuccess,
+    ImageAPIRequest,
+    get_image_format,
+)
 
-class Test_Format_Pdf(BaseTest):
-    label = 'PDF format'
-    level = 3
-    category = 6
-    versions = [u'1.0', u'1.1', u'2.0', u'3.0']
-    validationInfo = None
 
-    def run(self, result):
+class FormatPDF(ValidationTest):
+    name = "JPEG format"
+    compliance_level = ComplianceLevel.OPTIONAL
+    category = TestCategory.FORMAT
+    versions = [IIIFVersion.V2, IIIFVersion.V3]
+    extra_name = "pdf"
 
-        params = {'format': 'pdf'}
-        url = result.make_url(params)
-        # Need as plain string for magic
-        try:
-            wh = urlopen(url)
-        except HTTPError as error:    
-            raise ValidatorError('format', 'http response code: {}'.format(error.code), url, result, 'Failed to retrieve pdf, got response code {}'.format(error.code))
-        img = wh.read()
-        wh.close()
-        # check response code before checking the file
-        if wh.getcode() != 200:
-            raise ValidatorError('format', 'http response code: {}'.format(wh.getcode()), url, result, 'Failed to retrieve pdf, got response code {}'.format(wh.getcode()))
-
-        with magic.Magic() as m:
-            info = m.id_buffer(img)
-            if not info.startswith('PDF document'):
-                # Not JP2
-                raise ValidatorError('format', info, 'PDF', result)
-            else:
-                result.tests.append('format')
-                return result
+    @staticmethod
+    def run(server: TargetServer) -> ValidationFailure | ValidationSuccess:
+        req = ImageAPIRequest.of(format="pdf")
+        fmt = get_image_format(server, req)
+        if fmt == "pdf":
+            return ValidationSuccess(details="Server returned a PDF image")
+        else:
+            url = req.url(server)
+            return ValidationFailure(
+                url=url,
+                expected="PDF image",
+                received=f"{fmt or '<none>'} image",
+                details="Server did not return a PDF image",
+            )

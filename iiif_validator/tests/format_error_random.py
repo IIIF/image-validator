@@ -1,17 +1,38 @@
-from .test import BaseTest, ValidatorError
+import random
 
-class Test_Format_Error_Random(BaseTest):
-    label = 'Random format gives 400'
-    level = 1
-    category = 6
-    versions = [u'1.0', u'1.1', u'2.0', u'3.0']
-    validationInfo = None
+from .test import (
+    ValidationTest,
+    TargetServer,
+    ComplianceLevel,
+    TestCategory,
+    IIIFVersion,
+    ValidationFailure,
+    ValidationSuccess,
+    ImageAPIRequest,
+    make_request,
+    make_random_string,
+)
 
-    def run(self, result):
-        url = result.make_url({'format': self.validationInfo.make_randomstring(3)})
-        try:
-            error = result.fetch(url)
-            self.validationInfo.check('status', result.last_status, [400, 415, 503], result)
-            return result
-        except Exception as error:
-            raise ValidatorError('url-check', str(error), 400, result, 'Failed to get random format from url: {}.'.format(url))
+
+class TestFormatErrorRandom(ValidationTest):
+    name = "Random format gives 400"
+    compliance_level = ComplianceLevel.LEVEL_1
+    category = TestCategory.FORMAT
+    versions = [IIIFVersion.V2, IIIFVersion.V3]
+
+    @staticmethod
+    def run(server: TargetServer) -> ValidationFailure | ValidationSuccess:
+        random.seed(31337)
+        for _ in range(16):
+            random_format = make_random_string(3)
+            url = ImageAPIRequest.of(format=random_format).url(server)
+            resp = make_request(url)
+            if resp.status == 400:
+                continue  # This is the expected outcome
+            return ValidationFailure(
+                url=url,
+                expected="400 Bad Request",
+                received=f"{resp.status} {resp.body.decode('utf8')}",
+                details="Server did not return 400 for random format",
+            )
+        return ValidationSuccess(details="Server returned 400 for random formats")

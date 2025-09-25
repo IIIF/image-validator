@@ -1,18 +1,37 @@
-from .test import BaseTest, ValidatorError
+import random
 import uuid
 
-class Test_Id_Error_Random(BaseTest):
-    label = 'Random identifier gives 404'
-    level = 1
-    category = 1
-    versions = [u'1.0', u'1.1', u'2.0', u'3.0']
-    validationInfo = None
+from .test import (
+    ValidationTest,
+    ComplianceLevel,
+    TestCategory,
+    IIIFVersion,
+    TargetServer,
+    ValidationFailure,
+    ValidationSuccess,
+    make_request,
+)
 
-    def run(self, result):
-        try:
-            url = result.make_url({'identifier': str(uuid.uuid1())})
-            error = result.fetch(url)
-            self.validationInfo.check('status', result.last_status, 404, result)
-            return result
-        except Exception as error:
-            raise ValidatorError('url-check', str(error), 404, result, 'Failed to get random identifier from url: {}.'.format(url))
+
+class ErrorRandomId(ValidationTest):
+    name = "Random Identifier gives 404"
+    compliance_level = ComplianceLevel.LEVEL_1
+    category = TestCategory.INFO
+    versions = [IIIFVersion.V2, IIIFVersion.V3]
+
+    @staticmethod
+    def run(server: TargetServer) -> ValidationFailure | ValidationSuccess:
+        # For reproducability
+        random.seed(31337)
+        random_id = uuid.uuid1()
+        url = f"{server.base_url}/{random_id}/info.json"
+        resp = make_request(url)
+        if resp.status == 404:
+            return ValidationSuccess(details="Returned 404 for random identifier")
+        else:
+            return ValidationFailure(
+                url=url,
+                expected="HTTP Status 404",
+                received=f"HTTP Status {resp.status}",
+                details="Got unexpected status code for random identifier",
+            )

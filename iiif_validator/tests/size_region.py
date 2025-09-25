@@ -1,33 +1,71 @@
-from .test import BaseTest, ValidatorError
 import random
 
-class Test_Size_Region(BaseTest):
-    label = 'Region at specified size'
-    level = 1
-    category = 3
-    versions = [u'1.0', u'1.1', u'2.0', u'3.0']
-    validationInfo = None
+from .test import (
+    ValidationTest,
+    ComplianceLevel,
+    TestCategory,
+    IIIFVersion,
+    TargetServer,
+    ValidationFailure,
+    ValidationSuccess,
+    ImageAPIRequest,
+    get_image,
+    get_expected_image,
+    compare_images,
+)
 
-    def run(self, result):
-        try:
-            # ask for a random region, at a random size < 100 so that
-            # it is within one color square of the test image
-            for i in range(5):
-                s = random.randint(35,90)
-                x = random.randint(0,9)
-                y = random.randint(0,9)
-                params = {'size': '%s,%s' % (s,s)}
-                params['region'] = '%s,%s,100,100' % (x*100, y*100)
-                img = result.get_image(params)
-                if img.size != (s,s):
-                    raise ValidatorError('size', img.size, (s,s), result)
-                try:
-                    ok = self.validationInfo.do_test_square(img,x,y, result)
-                except TypeError as error:
-                    raise ValidatorError('color-error', str(error), 'No error', result,'Failed to check colour due to {}'.format(error))
 
-                if not ok:
-                    raise ValidatorError('color', 1, self.validationInfo.colorInfo[0][0], result)
-            return result
-        except Exception as error:
-            raise ValidatorError('General error', str(error), 'No error', result,'Failed to check size due to: {}'.format(error))
+class SizeRegionTest(ValidationTest):
+    name = "Region at specified size"
+    compliance_level = ComplianceLevel.LEVEL_2
+    category = TestCategory.SIZE
+    versions = [IIIFVersion.V2, IIIFVersion.V3]
+
+    @staticmethod
+    def run(server: TargetServer) -> list[ValidationSuccess | ValidationFailure]:
+        random.seed(31337)
+        full_expected_img = get_expected_image()
+        results = []
+
+        for i in range(5):
+            s = random.randint(35, 90)
+            x = random.randint(0, 9)
+            y = random.randint(0, 9)
+
+            region = f"{x * 100},{y * 100},100,100"
+            size = f"{s},{s}"
+            req = ImageAPIRequest.of(region=region, size=size)
+            img = get_image(server, req)
+
+            if img.width != s or img.height != s:
+                url = req.url(server)
+                results.append(
+                    ValidationFailure(
+                        url=url,
+                        expected=f"({s}, {s})",
+                        received=f"({img.width}, {img.height})",
+                        details=f"Incorrect image size for region='{region}' and size='{size}'",
+                    )
+                )
+                continue
+
+            expected_region = full_expected_img.extract_area(x * 100, y * 100, 100, 100)
+            expected_img = expected_region.thumbnail_image(s, height=s, size="force")
+
+            if compare_images(img, expected_img):
+                results.append(
+                    ValidationSuccess(
+                        details=f"Image content correct for region='{region}' and size='{size}'"
+                    )
+                )
+            else:
+                url = req.url(server)
+                results.append(
+                    ValidationFailure(
+                        url=url,
+                        expected=f"Image content to match validation image for region {x},{y}",
+                        received="Different image content",
+                        details=f"Image content incorrect for region='{region}' and size='{size}'",
+                    )
+                )
+        return results

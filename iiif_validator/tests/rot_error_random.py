@@ -1,17 +1,39 @@
-from .test import BaseTest, ValidatorError
+from urllib.error import HTTPError
 
-class Test_Rot_Error_Random(BaseTest):
-    label = 'Random rotation gives 400'
-    level = 1
-    category = 4
-    versions = [u'1.0', u'1.1', u'2.0', u'3.0']
-    validationInfo = None
+from .test import (
+    ValidationTest,
+    ComplianceLevel,
+    TestCategory,
+    IIIFVersion,
+    TargetServer,
+    ValidationFailure,
+    ValidationSuccess,
+    ImageAPIRequest,
+    make_random_string,
+    make_request,
+)
 
-    def run(self, result):
-        try:
-            url = result.make_url({'rotation': self.validationInfo.make_randomstring(4)})
-            error = result.fetch(url)
-            self.validationInfo.check('status', result.last_status, 400, result)
-            return result
-        except Exception as error:
-            raise ValidatorError('url-check', str(error), 404, result, 'Failed to get random rotation from url: {}.'.format(url))
+
+class RotationErrorRandomTest(ValidationTest):
+    name = "Random rotation gives 400"
+    compliance_level = ComplianceLevel.LEVEL_1
+    category = TestCategory.ROTATION
+    versions = [IIIFVersion.V2, IIIFVersion.V3]
+
+    @staticmethod
+    def run(server: TargetServer) -> ValidationSuccess | ValidationFailure:
+        random_string = make_random_string(4)
+        request = ImageAPIRequest.of(rotation=random_string)
+        url = request.url(server)
+        resp = make_request(url)
+        if resp.status != 400:
+            return ValidationFailure(
+                url=url,
+                expected="HTTP Status 400",
+                received=f"HTTP Status {resp.status}",
+                details=f"Server did not return an error for invalid rotation value '{random_string}'.",
+            )
+        else:
+            return ValidationSuccess(
+                details=f"Server correctly returned HTTP 400 for invalid rotation value '{random_string}'."
+            )

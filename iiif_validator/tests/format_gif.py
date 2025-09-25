@@ -1,18 +1,34 @@
-from .test import BaseTest
+from .test import (
+    ValidationTest,
+    ComplianceLevel,
+    TestCategory,
+    IIIFVersion,
+    TargetServer,
+    ValidationFailure,
+    ValidationSuccess,
+    ImageAPIRequest,
+    get_image_format,
+)
 
-class Test_Format_Gif(BaseTest):
-    label = 'GIF format'
-    level = 3
-    category = 6
-    versions = [u'1.0', u'1.1', u'2.0', u'3.0']
-    validationInfo = None
 
-    def run(self, result):
-        try:
-            params = {'format': 'gif'}
-            img = result.get_image(params)
-            self.validationInfo.check('quality', img.format, 'GIF', result)
-            return result
-        except:
-            self.validationInfo.check('status', result.last_status, 200, result)
-            raise
+class FormatGif(ValidationTest):
+    name = "GIF format"
+    compliance_level = ComplianceLevel.OPTIONAL
+    category = TestCategory.FORMAT
+    versions = [IIIFVersion.V2, IIIFVersion.V3]
+    extra_name = "gif"
+
+    @staticmethod
+    def run(server: TargetServer) -> ValidationFailure | ValidationSuccess:
+        req = ImageAPIRequest.of(format="gif")
+        fmt = get_image_format(server, req)
+        if fmt == "gif":
+            return ValidationSuccess(details="Server returned a GIF image")
+        else:
+            url = req.url(server)
+            return ValidationFailure(
+                url=url,
+                expected="GIF image",
+                received=f"{fmt or '<none>'} image",
+                details="Server did not return a GIF image",
+            )

@@ -1,68 +1,145 @@
-from .test import BaseTest, ValidatorError
 import random
 
-class Test_Size_Up(BaseTest):
-    label = 'Size greater than 100%'
-    level = 3
-    category = 3
-    versions = [u'1.0', u'1.1', u'2.0', u'3.0'] 
-    validationInfo = None
+from .test import (
+    ValidationTest,
+    ComplianceLevel,
+    TestCategory,
+    IIIFVersion,
+    TargetServer,
+    ValidationFailure,
+    ValidationSuccess,
+    ImageAPIRequest,
+    get_image,
+    get_expected_image,
+    compare_images,
+    make_request,
+)
 
-    def run(self, result):
-        s = random.randint(1100,2000)
-        params = {'size': ',%s' % s}
-        try:
-            img = result.get_image(params)
 
-            self.validationInfo.check('size', img.size, (s,s), result)
-            return self.checkSquares(img, s, result)
-        except ValidatorError:
-            raise
-        except:
-            if result.version.startswith("3"):
-                self.validationInfo.check('size', result.last_status, 400, result, "In version 3.0 image should not be upscaled unless the ^ notation is used.")
-            else:    
-                self.validationInfo.check('status', result.last_status, 200, result, 'Failed to retrieve upscaled image.')
-                raise
+class SizeUpTest(ValidationTest):
+    name = "Size greater than 100%"
+    compliance_level = ComplianceLevel.OPTIONAL
+    category = TestCategory.SIZE
+    versions = [IIIFVersion.V2, IIIFVersion.V3]
+    extra_name = "sizeUpscaling"
 
-        # Now testing vesrion 3.0 upscalling notation        
-        self.checkSize(result, (s, s), '^%s,%s' % (s,s), 'Failed to get correct size for an image using the ^ notation')
-        self.checkSize(result, (s, s), '^,%s' % (s), 'Failed to get correct size when asking for the height only using the ^ notation')
-        self.checkSize(result, (s, s), '^%s,' % (s), 'Failed to get correct size when asking for the width only using the ^ notation')
-        # needs a bit more thought as maxium may not be the same as full, should check the info.json
-        self.checkSize(result, (1000, 1000), '^max', 'Failed to get max size while using the ^ notation') 
-        self.checkSize(result, (2000, 2000), '^pct:200', 'Failed to get correct size when asking for the 200% size image and using the ^ notation') 
-        self.checkSize(result, (500, 500), '^!2000,500', 'Failed to get correct size when trying to fit in a box !2000,500 using the ^ notation but not upscallingtrying to fit in a box !2000,500 using the ^ notation but not upscalling') 
-        self.checkSize(result, (2000, 2000), '^!2000,3000', 'Failed to get correct size when trying to fit in a box !2000,3000 using the ^notation that requires upscalling.') 
-
-        return result
-
-    def checkSize(self, result, size, sizeStr, message):    
-        params = {'size': sizeStr}
-        try:
-            img = result.get_image(params)
-        except:
-            self.validationInfo.check('status', result.last_status, 200, result, 'Failed to retrieve upscaled image using ^ notation.')
-        self.validationInfo.check('size', img.size, size, result, message)
-        self.checkSquares(img, size[0], result)
-
-        
-    def checkSquares(self, img, sourceSize, result):            
-        match = 0
-        sqs = int(sourceSize / 1000.0 * 100)
-        for i in range(5):
-            x = random.randint(0,9)
-            y = random.randint(0,9)
-            xi = x * sqs + 13;
-            yi = y * sqs + 13;
-            box = (xi,yi,xi+(sqs-13),yi+(sqs-13))
-            sqr = img.crop(box)
-            ok = self.validationInfo.do_test_square(sqr, x, y, result)
-            if ok:
-                match += 1
-            else:
-                error = (x,y)      
-        if match >= 3:           
-            return result
+    @staticmethod
+    def run(server: TargetServer) -> list[ValidationSuccess | ValidationFailure]:
+        random.seed(31337)
+        if server.version == IIIFVersion.V3:
+            return SizeUpTest.run_v3(server)
         else:
-            raise ValidatorError('color', 1,0, result) 
+            return SizeUpTest.run_v2(server)
+
+    @staticmethod
+    def run_v2(server: TargetServer) -> list[ValidationSuccess | ValidationFailure]:
+        s = random.randint(1100, 2000)
+        req = ImageAPIRequest.of(size=f",{s}")
+        img = get_image(server, req)
+
+        expected_size = (s, s)
+        if img.size != expected_size:
+            url = req.url(server)
+            return [
+                ValidationFailure(
+                    url=url,
+                    expected=f"Image size to be {expected_size}",
+                    received=f"{img.size}",
+                    details=f"Incorrect image size for upscaled size=',{s}'",
+                )
+            ]
+
+        full_expected_img = get_expected_image()
+        expected_img = full_expected_img.thumbnail_image(s, height=s, size="force")
+        if not compare_images(img, expected_img):
+            url = req.url(server)
+            return [
+                ValidationFailure(
+                    url=url,
+                    expected="Image content to match validation image",
+                    received="Different image content",
+                    details=f"Image content incorrect for upscaled size=',{s}'",
+                )
+            ]
+
+        return [
+            ValidationSuccess(
+                details=f"Image size and content correct for upscaled size=',{s}'"
+            )
+        ]
+
+    @staticmethod
+    def run_v3(server: TargetServer) -> list[ValidationSuccess | ValidationFailure]:
+        results = []
+        s = random.randint(1100, 2000)
+
+        # Test that upscaling without ^ fails
+        req = ImageAPIRequest.of(size=f",{s}")
+        url = req.url(server)
+        resp = make_request(url)
+        if resp.status != 200:
+            results.append(
+                ValidationSuccess(
+                    details=f"Upscaling size=',{s}' failed as expected in v3 without '^'."
+                )
+            )
+        else:
+            results.append(
+                ValidationFailure(
+                    url=url,
+                    expected="Non-200 status code",
+                    received=f"{resp.status}",
+                    details=f"Upscaling size=',{s}' should fail in v3 without '^'.",
+                )
+            )
+
+        # Test that upscaling with ^ works
+        sizes_to_check = {
+            f"^{s},{s}": (s, s),
+            f"^,{s}": (s, s),
+            f"^{s},": (s, s),
+            "^max": (1000, 1000),
+            "^pct:200": (2000, 2000),
+            "^!2000,500": (500, 500),
+            "^!2000,3000": (2000, 2000),
+        }
+
+        full_expected_img = get_expected_image()
+        for size_str, expected_size in sizes_to_check.items():
+            req = ImageAPIRequest.of(size=size_str)
+            img = get_image(server, req)
+
+            if img.size != expected_size:
+                url = req.url(server)
+                results.append(
+                    ValidationFailure(
+                        url=url,
+                        expected=f"Image size to be {expected_size}",
+                        received=f"{img.size}",
+                        details=f"Incorrect image size for upscaled size='{size_str}'",
+                    )
+                )
+                continue
+
+            expected_img = full_expected_img.thumbnail_image(
+                expected_size[0], height=expected_size[1], size="force"
+            )
+            if not compare_images(img, expected_img):
+                url = req.url(server)
+                results.append(
+                    ValidationFailure(
+                        url=url,
+                        expected="Image content to match validation image",
+                        received="Different image content",
+                        details=f"Image content incorrect for upscaled size='{size_str}'",
+                    )
+                )
+                continue
+
+            results.append(
+                ValidationSuccess(
+                    details=f"Image size and content correct for upscaled size='{size_str}'"
+                )
+            )
+
+        return results

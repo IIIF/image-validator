@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "iiif-validator-ng"
+version = "0.1.0"
+authors = [
+  { name="Johannes Baiter", email="johannes.baiter@bsb-muenchen.de" },
+  { name="IIIF Contributors", email="simeon.warner@cornell.edu" },
+]
+description = "IIIF Image API Validator NG"
+readme = "README"
+requires-python = ">=3.9"
+license = { text = "Apache-2.0" }
+dependencies = [
+    "pyvips>=3.0.0",
+    "rich>=14.1.0",
+]
+
+[project.scripts]
+iiif-validator = "iiif_validator.cli:cli"
+
+[project.urls]
+"Homepage" = "https://github.com/dbmdz/image-validator-ng"
+
+[tool.mypy]
+mypy_path = ".stubs"
+
+[tool.pyright]
+stubPath = ".stubs"
+
+

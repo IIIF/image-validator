@@ -1,132 +1,378 @@
+import json
+from typing import Callable
 
-from .test import BaseTest, ValidatorError
+from .test import (
+    ValidationTest,
+    ComplianceLevel,
+    TestCategory,
+    IIIFVersion,
+    TargetServer,
+    ValidationSuccess,
+    ValidationFailure,
+    get_info_json,
+    make_request,
+)
 
-class Test_Info_Json(BaseTest):
-    label = "Check Image Information"
-    level = 0
-    category = 1
-    versions = ["1.0","1.1","2.0","3.0"]
-    validationInfo = None
 
-    def __init__(self, info):
-        self.validationInfo = info
-        
-    def run(self, result):
-        # Does server have info.json
+class TestInfoJsonStructure(ValidationTest):
+    name = "Check info.json"
+    compliance_level = ComplianceLevel.LEVEL_0
+    category = TestCategory.INFO
+    versions = [IIIFVersion.V2, IIIFVersion.V3]
+
+    @staticmethod
+    def run(server: TargetServer) -> list[ValidationFailure | ValidationSuccess]:
+        results = []
+        info_resp = make_request(server.info_url())
+        if info_resp.status != 200:
+            url = server.info_url()
+            return [
+                ValidationFailure(
+                    url=url,
+                    expected="status code 200",
+                    received=f"status code {info_resp.status}",
+                    details="Failed to fetch info.json",
+                )
+            ]
+
+        content_type = info_resp.headers.get("content-type", "").split(";")[0]
+        if content_type not in ("application/json", "application/ld+json"):
+            results.append(
+                ValidationFailure(
+                    url=server.info_url(),
+                    expected="content-type is application/json or application/ld+json",
+                    received=f"content-type is {content_type}",
+                    details="Invalid content-type for info.json response",
+                )
+            )
         try:
-            info = result.get_info()
-            if info == None:
-                raise ValidatorError('info.json is JSON', True, False, result)
+            json.loads(info_resp.body)
+        except ValueError:
+            results.append(
+                ValidationFailure(
+                    url=server.info_url(),
+                    expected="valid JSON",
+                    received="invalid JSON",
+                    details="info.json response must be valid JSON",
+                )
+            )
+            return results
 
-            self.validationInfo.check('required-field: width', 'width' in info, True, result)
-            self.validationInfo.check('required-field: height', 'height' in info, True, result)
-            self.validationInfo.check('type-is-int: height', type(info['height']) == int, True, result)
-            self.validationInfo.check('type-is-int: width', type(info['width']) == int, True, result)
+        info = get_info_json(server)
+        is_v2 = IIIFVersion.V2 == server.version
+        id_field = "@id" if is_v2 else "id"
+        context = f"http://iiif.io/api/image/{2 if is_v2 else 3}/context.json"
+        info_url = server.info_url()
+        base_url = f"{server.base_url}/{server.validation_id}"
+        results.extend(
+            [
+                has_required_field(info, "width", url=info_url),
+                field_has_type(info, "width", int, url=info_url),
+                has_required_field(info, "height", url=info_url),
+                field_has_type(info, "height", int, url=info_url),
+                has_required_field(info, id_field, url=info_url),
+                field_has_value_matching(
+                    info,
+                    id_field,
+                    lambda val: isinstance(val, str) and val.startswith("http"),
+                    "is an URL",
+                    url=info_url,
+                ),
+                field_has_value(info, id_field, base_url, url=info_url),
+                has_required_field(info, "@context", url=info_url),
+                field_has_value(info, "@context", context, url=info_url),
+                has_required_field(info, "protocol", url=info_url),
+                field_has_value(
+                    info, "protocol", "http://iiif.io/api/image", url=info_url
+                ),
+                *check_profile(is_v2, info, url=info_url),
+                *check_sizes(info, url=info_url),
+                *check_tiles(info, url=info_url),
+                *(check_v3_fields(info, url=info_url) if not is_v2 else []),
+            ]
+        )
+        return results
 
-            # Now switch on version
-            if result.version == "1.0":
-                self.validationInfo.check('required-field: identifier', 'identifier' in info, True, result)                
-            else:
-                idField = '@id'
-                if result.version[0] == '3':
-                    idField = 'id'
-                self.validationInfo.check('required-field: {}'.format(idField), idField in info, True, result, 'info.json is missing required field `{}`'.format(idField))
-                self.validationInfo.check('type-is-uri: {}'.format(idField), info[idField].startswith('http'), True, result)
-                # Check id is same as request URI
-                self.validationInfo.check('{} is correct URI'.format(idField), info[idField] == result.last_url.replace('/info.json', ''), True, result, 'Found: {} Expected: {}'.format(info[idField], result.last_url.replace('/info.json', '')))
 
-                self.validationInfo.check('required-field: @context', '@context' in info, True, result)
-                if result.version == "1.1":
-                    self.validationInfo.check('correct-context', info['@context'], 
-                        ["http://library.stanford.edu/iiif/image-api/1.1/context.json", "http://iiif.io/api/image/1/context.json"], result)
-                elif result.version[0] == "2":
-                    self.validationInfo.check('correct-context', info['@context'], "http://iiif.io/api/image/2/context.json", result)
-                elif result.version[0] == "3":
-                    if type(info['@context']) == list:
-                        self.validationInfo.check('correct-context', "http://iiif.io/api/image/3/context.json" in info['@context'], True, result,'@context missing version 3.0 IIIF context: http://iiif.io/api/image/3/context.json')
-                    else:
-                        self.validationInfo.check('correct-context', info['@context'], "http://iiif.io/api/image/3/context.json", result)
+def has_required_field(
+    info: dict, field: str, url: str | None = None
+) -> ValidationFailure | ValidationSuccess:
+    return check(f"required field: {field}", field in info, url=url)
 
-                
-                if int(result.version[0]) >= 2:
-                    self.validationInfo.check('required-field: protocol', 'protocol' in info, True, result)
-                    self.validationInfo.check('correct-protocol', info['protocol'], 'http://iiif.io/api/image', result)
 
-                if result.version[0] == "2" or result.version[0] == "3":
-                    self.validationInfo.check('required-field: profile', 'profile' in info, True, result)
-                    profs = info['profile']
-                    if result.version[0] == "2":
-                        self.validationInfo.check('is-list', type(profs), list, result, 'Profile should be a list.')
-                        self.validationInfo.check('profile-compliance', profs[0].startswith('http://iiif.io/api/image/2/level'), True, result)
-                    else:    
-                        self.validationInfo.check('profile-compliance', profs in ['level0', 'level1', 'level2'], True, result, 'Profile should be one of level0, level1 or level2. https://iiif.io/api/image/3.0/#6-compliance-level-and-profile-document')
+def field_has_type(
+    info: dict, field: str, type_: type, url: str | None = None
+) -> ValidationFailure | ValidationSuccess:
+    return check(
+        f"is {type_} field: {field}", isinstance(info.get(field), type_), url=url
+    )
 
-                    if 'sizes' in info:
-                        sizes = info['sizes']
-                        self.validationInfo.check('is-list', type(sizes), list, result)
-                        for sz in sizes:
-                            self.validationInfo.check('is-object', type(sz), dict, result)
-                            self.validationInfo.check('required-field: height', 'height' in sz, True, result)
-                            self.validationInfo.check('required-field: width', 'width' in sz, True, result)
-                            self.validationInfo.check('type-is-int: height', type(sz['height']), int, result)
-                            self.validationInfo.check('type-is-int: width', type(sz['width']), int, result)
 
-                    if 'tiles' in info:
-                        tiles = info['tiles']
-                        self.validationInfo.check('is-list', type(tiles), list, result)
-                        for t in tiles:
-                            self.validationInfo.check('is-object', type(t), dict, result)
-                            self.validationInfo.check('required-field: scaleFactors', 'scaleFactors' in t, True, result) 
-                            self.validationInfo.check('required-field: width', 'width' in t, True, result)                        
-                            self.validationInfo.check('type-is-int: width', type(t['width']), int, result)
-                    # extra version 3.0 checks        
-                    if result.version[0] == "3":        
-                        self.validationInfo.check('correct-type', 'type' in info and info['type'], "ImageService3", result, "Info.json missing required type of ImageService3.")
-                        self.validationInfo.check('license-renamed', 'license' in info, False, result,'license has been renamed rights in 3.0',warning=True)
-                        if 'rights' in info:
-                            self.validationInfo.check('type-is-uri: rights', info['rights'].startswith('http'), True, result,'Rights should be a single URI from Creative Commons, RightsStatements.org or URIs registered as extensions.')
-                        if 'extraQualities' in info:    
-                            self.validationInfo.check('is-list', type(info['extraQualities']), list, result, 'extraQualities should be a list.')
-                        if 'extraFormats' in info:    
-                            self.validationInfo.check('is-list', type(info['extraFormats']), list, result, 'extraFormats should be a list.')
-                        if 'extraFeatures' in info:    
-                            self.validationInfo.check('is-list', type(info['extraFeatures']), list, result, 'extraFeatures should be a list.')
+def field_has_value(
+    info: dict, field: str, value: object, url: str | None = None
+) -> ValidationFailure | ValidationSuccess:
+    return check(
+        f"field {field} has value: {value}",
+        info.get(field) == value,
+        str(value),
+        str(info.get(field)),
+        url=url,
+    )
 
-                        self.checkLinkingProperties('service', info, result)
-                        self.checkLinkingProperties('partOf', info, result)
-                        self.checkLinkingProperties('seeAlso', info, result)
 
-                        self.validationInfo.check('attribution-missing', 'attribution' in info, False, result,'attribution has been removed in 3.0',warning=True)
-                        self.validationInfo.check('logo-missing', 'logo' in info, False, result,'logo has been removed in 3.0',warning=True)
+def field_has_value_matching(
+    info: dict,
+    field: str,
+    predicate: Callable,
+    description: str,
+    url: str | None = None,
+) -> ValidationFailure | ValidationSuccess:
+    return check(
+        f"field {field} {description}",
+        predicate(info.get(field)),
+        description,
+        str(info.get(field)),
+        url=url,
+    )
 
-            return result
-        except Exception as exception:
-            self.validationInfo.check('status', result.last_status, 200, result, "Failed to reach {} due to http status code: {}.".format(result.make_info_url(), result.last_status))
-            ct = result.last_headers['content-type']
-            scidx = ct.find(';')
-            if scidx > -1:
-                ct = ct[:scidx]
-            self.validationInfo.check('content-type', 'application/json' in result.last_headers['content-type'] or 'application/ld+json' in result.last_headers['content-type'], True, result, 'Content-type for the info.json needs to be either application/json or application/ld+json.')
-            raise
 
-    def checkLinkingProperties(self, name, info, result):
-        if name in info:
-            self.validationInfo.check('is-list', type(info[name]), list, result, '{} should be a list.'.format(name))
-            for item in info[name]:
-                self.validationInfo.check('is-object', type(item), dict, result, 'Item: {} in {} should be an object.'.format(item, name))
+def check_profile(
+    is_v2: bool, info: dict, url: str | None = None
+) -> list[ValidationFailure | ValidationSuccess]:
+    results = []
+    results.append(has_required_field(info, "profile", url=url))
+    if is_v2:
+        results.extend(
+            [
+                field_has_type(info, "profile", list, url=url),
+                field_has_value_matching(
+                    info,
+                    "profile",
+                    lambda p: isinstance(p, list)
+                    and p[0].startswith("http://iiif.io/api/image/2/level"),
+                    "should have an official IIIF profile as the first profile",
+                    url=url,
+                ),
+            ]
+        )
+    else:
+        results.append(
+            field_has_value_matching(
+                info,
+                "profile",
+                lambda p: p in ["level0", "level1", "level2"],
+                "should be one of ['level0', 'level1', 'level2']",
+                url=url,
+            )
+        )
+    return results
 
-                if name == 'service' and (u'id' not in item and u'@id' not in item) or (u'type' not in item and u'@type' not in item):
-                    raise ValidatorError('missing-key', '','id, @id, type or @type', result, 'Item: {} in {} needs a id and type or @id and @type'.format(item,name))
-                elif name != 'service' and ('id' not in item or 'type' not in item):   
-                   raise ValidatorError('missing-key', '','id or type missing', result, 'Item: {} in {} needs a id and type'.format(item, name))
-                    
-               #if seeAlso should have label, format, profile
-               #if partOf should have label
-               #if service should have profile
-                self.checkLabel(item, result)
 
-    def checkLabel(self, parent, result):
-        if 'label' in parent:
-            self.validationInfo.check('is-object', type(parent['label']), dict, result, 'Label must be an object')
-            for lang in parent['label']:
-                self.validationInfo.check('is-list', type(parent['label'][lang]), list, result, 'Value of Label with lng: {} should be list'.format(lang))
+def check_sizes(
+    info: dict, url: str | None = None
+) -> list[ValidationFailure | ValidationSuccess]:
+    sizes = info.get("sizes")
+    if sizes is None:
+        return []
+
+    results = [field_has_type(info, "sizes", list, url=url)]
+    if not isinstance(sizes, list):
+        return results
+
+    for size in sizes:
+        if not isinstance(size, dict):
+            results.append(
+                ValidationFailure(
+                    url=url or "<unknown>",
+                    expected="dict/object",
+                    received=str(type(size)),
+                    details="entries in 'sizes' must be objects",
+                )
+            )
+        results.extend(
+            [
+                has_required_field(size, "width", url=url),
+                field_has_type(size, "width", int, url=url),
+                has_required_field(size, "height", url=url),
+                field_has_type(size, "height", int, url=url),
+            ]
+        )
+    return results
+
+
+def check_tiles(
+    info: dict, url: str | None = None
+) -> list[ValidationFailure | ValidationSuccess]:
+    tiles = info.get("tiles")
+    if tiles is None:
+        return []
+
+    results = [field_has_type(info, "tiles", list, url=url)]
+    if not isinstance(tiles, list):
+        return results
+
+    for tile in tiles:
+        if not isinstance(tile, dict):
+            results.append(
+                ValidationFailure(
+                    url=url or "<unknown>",
+                    expected="dict/object",
+                    received=str(type(tile)),
+                    details="entries in 'tiles' must be objects",
+                )
+            )
+        results.extend(
+            [
+                has_required_field(tile, "width", url=url),
+                field_has_type(tile, "width", int, url=url),
+                has_required_field(tile, "scaleFactors", url=url),
+                field_has_value_matching(
+                    tile,
+                    "scaleFactors",
+                    lambda f: isinstance(f, list)
+                    and all(isinstance(x, int) for x in f),
+                    "scaleFactors must be integer values",
+                    url=url,
+                ),
+            ]
+        )
+    return results
+
+
+def check_v3_fields(
+    info: dict, url: str | None = None
+) -> list[ValidationFailure | ValidationSuccess]:
+    results = []
+    results.append(has_required_field(info, "type", url=url))
+    results.append(field_has_value(info, "type", "ImageService3", url=url))
+    if "license" in info:
+        results.append(
+            ValidationFailure(
+                url=url or "<unknown>",
+                expected="field name 'rights'",
+                received="field name 'license'",
+                details="'license' has been renamed to 'rights' in v3",
+            )
+        )
+    if "rights" in info:
+        results.append(field_has_type(info, "rights", str, url=url))
+        results.append(
+            field_has_value_matching(
+                info,
+                "rights",
+                lambda r: isinstance(r, str) and r.startswith("http:"),
+                "'rights' must be a single URI from Creative Commonsl, RightsStatements.org or URIs registered as extensions",
+                url=url,
+            )
+        )
+    if "extraQualities" in info:
+        field_has_type(info, "extraQualities", list, url=url)
+        field_has_value_matching(
+            info,
+            "extraQualities",
+            lambda qs: isinstance(qs, list) and all(isinstance(q, str) for q in qs),
+            "'extraQualities' must be a list of strings",
+            url=url,
+        )
+    if "extraFormats" in info:
+        field_has_type(info, "extraFormats", list, url=url)
+        field_has_value_matching(
+            info,
+            "extraFormats",
+            lambda qs: isinstance(qs, list) and all(isinstance(q, str) for q in qs),
+            "'extraFormats' must be a list of strings",
+            url=url,
+        )
+    if "extraFeatures" in info:
+        field_has_type(info, "extraFeatures", list, url=url)
+        field_has_value_matching(
+            info,
+            "extraFeatures",
+            lambda qs: isinstance(qs, list) and all(isinstance(q, str) for q in qs),
+            "'extraFeatures' must be a list of strings",
+            url=url,
+        )
+    results.extend(check_linking_prop(info, "service", url=url))
+    results.extend(check_linking_prop(info, "partOf", url=url))
+    results.extend(check_linking_prop(info, "seeAlso", url=url))
+
+    if "attribution" in info:
+        results.append(
+            ValidationFailure(
+                url=url or "<unknown>",
+                expected="'attribution' field not to be present",
+                received="'attribution' field was present",
+                details="'attribution' field was removed in v3",
+            )
+        )
+    if "logo" in info:
+        results.append(
+            ValidationFailure(
+                url=url or "<unknown>",
+                expected="'logo' field not to be present",
+                received="'logo' field was present",
+                details="'logo' field was removed in v3",
+            )
+        )
+    return results
+    return results
+
+
+def check_linking_prop(
+    info: dict, field: str, url: str | None = None
+) -> list[ValidationFailure | ValidationSuccess]:
+    if field not in info:
+        return []
+    results = []
+    results.append(field_has_type(info, field, list, url=url))
+    if not isinstance(info[field], list):
+        return results
+
+    for item in info[field]:
+        if not isinstance(item, dict):
+            results.append(
+                ValidationFailure(
+                    url=url or "<unknown>",
+                    expected="type 'list'",
+                    received=f"type '{type(item)}",
+                    details=f"linking entries in {field} must be dicts/objects",
+                )
+            )
+        else:
+            results.append(
+                ValidationSuccess(
+                    details=f"Linking entries in {field} are dicts/objects"
+                )
+            )
+        results.extend(
+            [
+                has_required_field(item, "id", url=url),
+                field_has_type(item, "id", str, url=url),
+                has_required_field(item, "type", url=url),
+                field_has_type(item, "type", str, url=url),
+            ]
+        )
+
+    return results
+
+
+def check_label(obj: dict) -> list[ValidationFailure | ValidationSuccess]:
+    raise NotImplementedError
+
+
+def check(
+    description: str,
+    condition: bool,
+    expected: str = "👍",
+    received: str = "👎",
+    url: str | None = None,
+) -> ValidationFailure | ValidationSuccess:
+    if condition:
+        return ValidationSuccess(details=f"info.json passed: {description}")
+    else:
+        return ValidationFailure(
+            url=url or "<unknown>",
+            expected=expected,
+            received=received,
+            details=f"info.json failed: {description}",
+        )

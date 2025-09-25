@@ -1,17 +1,32 @@
-from .test import BaseTest, ValidatorError
+from .test import (
+    ValidationTest,
+    ComplianceLevel,
+    TestCategory,
+    IIIFVersion,
+    TargetServer,
+    ValidationFailure,
+    ValidationSuccess,
+    ImageAPIRequest,
+    make_request,
+    make_random_string,
+)
 
-class Test_Region_Error_Random(BaseTest):
-    label = 'Random region gives 400'
-    level = 1
-    category = 2
-    versions = [u'1.0', u'1.1', u'2.0', u'3.0']
-    validationInfo = None
 
-    def run(self, result):
-        try:
-            url = result.make_url({'region': self.validationInfo.make_randomstring(6)})
-            error = result.fetch(url)
-            self.validationInfo.check('status', result.last_status, 400, result)
-            return result          
-        except Exception as error:
-            raise ValidatorError('url-check', str(error), 404, result, 'Failed to get random region with url {}.'.format(url))
+class ErrorOnRandomRegion(ValidationTest):
+    name = "Random region gives 400"
+    compliance_level = ComplianceLevel.LEVEL_1
+    category = TestCategory.REGION
+    versions = [IIIFVersion.V2, IIIFVersion.V3]
+
+    @staticmethod
+    def run(server: TargetServer) -> ValidationFailure | ValidationSuccess:
+        url = ImageAPIRequest.of(region=make_random_string(6)).url(server)
+        resp = make_request(url)
+        if resp.status != 400:
+            return ValidationFailure(
+                url=url,
+                expected="400 Bad Request",
+                received=f"{resp.status} {resp.body.decode('utf8')}",
+                details=f"Server did not return 400 for random region",
+            )
+        return ValidationSuccess(details="Server returned 400 for random region")

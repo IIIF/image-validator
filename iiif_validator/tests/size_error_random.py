@@ -1,17 +1,46 @@
-from .test import BaseTest, ValidatorError
+import random
+from .test import (
+    ValidationTest,
+    ComplianceLevel,
+    TestCategory,
+    IIIFVersion,
+    TargetServer,
+    ValidationFailure,
+    ValidationSuccess,
+    ImageAPIRequest,
+    make_request,
+    make_random_string,
+)
 
-class Test_Size_Error_Random(BaseTest):
-    label = 'Random size gives 400'
-    level = 1
-    category = 3
-    versions = [u'1.0', u'1.1', u'2.0', u'3.0']
-    validationInfo = None
 
-    def run(self, result):
-        try:
-            url = result.make_url({'size': self.validationInfo.make_randomstring(6)})
-            error = result.fetch(url)
-            self.validationInfo.check('status', result.last_status, 400, result)
-            return result             
-        except Exception as error:
-            raise ValidatorError('url-check', str(error), 400, result, 'Failed to get random size with url {}.'.format(url))
+class SizeErrorRandomTest(ValidationTest):
+    name = "Random size gives 400"
+    compliance_level = ComplianceLevel.LEVEL_1
+    category = TestCategory.SIZE
+    versions = [IIIFVersion.V2, IIIFVersion.V3]
+
+    @staticmethod
+    def run(server: TargetServer) -> list[ValidationSuccess | ValidationFailure]:
+        random.seed(31337)
+        results = []
+        for i in range(4):
+            random_size = make_random_string(6)
+            req = ImageAPIRequest.of(size=random_size)
+            url = req.url(server)
+            resp = make_request(url)
+            if resp.status == 400:
+                results.append(
+                    ValidationSuccess(
+                        details=f"Received 400 for random size='{random_size}'"
+                    )
+                )
+            else:
+                results.append(
+                    ValidationFailure(
+                        url=url,
+                        expected="400",
+                        received=f"{resp.status}",
+                        details=f"Did not receive 400 for random size='{random_size}'",
+                    )
+                )
+        return results

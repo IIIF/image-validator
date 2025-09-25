@@ -1,40 +1,66 @@
-from .test import BaseTest, ValidatorError
 import random
 
-class Test_Size_Ch(BaseTest):
-    label = 'Size specified by ,h'
-    level = 1
-    category = 3
-    versions = [u'1.0', u'1.1', u'2.0', u'3.0']
-    validationInfo = None
+from .test import (
+    ValidationTest,
+    ComplianceLevel,
+    TestCategory,
+    IIIFVersion,
+    TargetServer,
+    ValidationFailure,
+    ValidationSuccess,
+    ImageAPIRequest,
+    get_image,
+    get_expected_image,
+    compare_images,
+)
 
-    def run(self, result):
-        try:
-            s = random.randint(450,750)
-            params = {'size': ',%s' % s}
-            img = result.get_image(params)
-            self.validationInfo.check('size', img.size, (s,s), result)
 
-            # Find square size
-            sqs = int(s/1000.0 * 100)
-            match = 0            
+class SizeChTest(ValidationTest):
+    name = "Size specified by ,h"
+    compliance_level = ComplianceLevel.LEVEL_1
+    category = TestCategory.SIZE
+    versions = [IIIFVersion.V2, IIIFVersion.V3]
+    extra_name = "sizeByH"
 
-            for i in range(5):
-                x = random.randint(0,9)
-                y = random.randint(0,9)
-                xi = x * sqs + 13;
-                yi = y * sqs + 13;
-                box = (xi,yi,xi+(sqs-13),yi+(sqs-13))
-                sqr = img.crop(box)
-                ok = self.validationInfo.do_test_square(sqr, x, y, result)
-                if ok:
-                    match += 1
-                else:
-                    error = (x,y)      
-            if match >= 4:           
-                return result
-            else:
-                raise ValidatorError('color', 1,0, result)           
-        except Exception as error:
-            self.validationInfo.check('status', result.last_status, 200, result)
-            raise ValidatorError('General error', str(error), 'No error', result,'Failed to check size due to: {}'.format(error))
+    @staticmethod
+    def run(server: TargetServer) -> list[ValidationSuccess | ValidationFailure]:
+        random.seed(31337)
+        results = []
+        full_expected_img = get_expected_image()
+        for i in range(4):
+            s = random.randint(450, 750)
+            req = ImageAPIRequest.of(size=f",{s}")
+            img = get_image(server, req)
+
+            expected_size = (s, s)
+            if (img.width, img.height) != expected_size:
+                url = req.url(server)
+                results.append(
+                    ValidationFailure(
+                        url=url,
+                        expected=f"Image size to be {expected_size}",
+                        received=f"{img.size}",
+                        details=f"Incorrect image size for size=',{s}'",
+                    )
+                )
+                continue
+
+            expected_img = full_expected_img.thumbnail_image(s, height=s, size="force")
+            if not compare_images(img, expected_img):
+                url = req.url(server)
+                results.append(
+                    ValidationFailure(
+                        url=url,
+                        expected="Image content to match validation image",
+                        received="Different image content",
+                        details=f"Image content incorrect for size=',{s}'",
+                    )
+                )
+                continue
+
+            results.append(
+                ValidationSuccess(
+                    details=f"Image size and content correct for size=',{s}'"
+                )
+            )
+        return results

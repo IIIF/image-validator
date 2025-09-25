@@ -1,17 +1,33 @@
-from .test import BaseTest, ValidatorError
+from .test import (
+    ValidationTest,
+    ComplianceLevel,
+    TestCategory,
+    IIIFVersion,
+    TargetServer,
+    ValidationFailure,
+    ValidationSuccess,
+    make_request,
+)
 
-class Test_Id_Error_Escapedslash(BaseTest):
-    label = 'Forward slash gives 404'
-    level = 1 # should this also be true for level0? Glen
-    category = 1
-    versions = [u'1.0', u'1.1', u'2.0',u'3.0']
-    validationInfo = None
 
-    def run(self, result):
-        try:
-            url = result.make_url({'identifier': 'a/b'})
-            error = result.fetch(url)
-            self.validationInfo.check('status', result.last_status, 404, result)
-            return result            
-        except Exception as error:
-            raise ValidatorError('url-check', str(error), 404, result, 'Failed to get random identifier from url {}.'.format(url))
+class ErrorEscapedSlash(ValidationTest):
+    name = "Forward slash gives 404"
+    compliance_level = ComplianceLevel.LEVEL_1
+    category = TestCategory.INFO
+    versions = [IIIFVersion.V2, IIIFVersion.V3]
+
+    @staticmethod
+    def run(server: TargetServer) -> ValidationFailure | ValidationSuccess:
+        resp = make_request(f"{server.base_url}/a/b/info.json")
+        if resp.status == 404:
+            return ValidationSuccess(
+                details="Returned 404 for forward slash in identifier"
+            )
+        else:
+            url = f"{server.base_url}/a/b/info.json"
+            return ValidationFailure(
+                url=url,
+                expected="HTTP Status 404",
+                received=f"HTTP Status {resp.status}",
+                details="Got unexpected status code for identifier with forward slash",
+            )

@@ -1,67 +1,66 @@
-from .test import BaseTest, ValidatorError
+from .test import (
+    ValidationTest,
+    ComplianceLevel,
+    TestCategory,
+    IIIFVersion,
+    TargetServer,
+    ValidationFailure,
+    ValidationSuccess,
+    ImageAPIRequest,
+    get_image,
+    get_expected_image,
+    compare_images,
+)
 
-class Test_Rot_Full_Basic(BaseTest):
-    label = 'Rotation by 90 degree values'
-    level = {u'3.0': 2, u'2.0': 2, u'1.0': 1, u'1.1': 1}
-    category = 4
-    versions = [u'1.0', u'1.1', u'2.0', u'3.0']
-    validationInfo = None
 
-    def run(self, result):
-        try:
-            params = {'rotation': '180'}
-            img = result.get_image(params)
-            s = 1000
-            if not img.size[0] in [s-1, s, s+1]:
-                raise ValidatorError('size', img.size, (s,s))  
-            # Test 0,0 vs 9,9
-            box = (12,12,76,76)
-            sqr = img.crop(box)
-            ok = self.validationInfo.do_test_square(sqr, 9, 9, result)
-            if not ok:
-                raise ValidatorError('color', 1, self.validationInfo.colorInfo[9][9], result)
-            box = (912,912,976,976)
-            sqr = img.crop(box)
-            ok = self.validationInfo.do_test_square(sqr, 0, 0, result)
-            if not ok:
-                raise ValidatorError('color', 1, self.validationInfo.colorInfo[0][0], result)
+class RotationFullBasicTest(ValidationTest):
+    name = "Rotation by 90 degree values"
+    compliance_level = ComplianceLevel.LEVEL_2
+    category = TestCategory.ROTATION
+    versions = [IIIFVersion.V2, IIIFVersion.V3]
+    extra_name = "rotationBy90s"
 
-            params = {'rotation': '90'}
-            img = result.get_image(params)
-            s = 1000
-            if not img.size[0] in [s-1, s, s+1]:
-                raise ValidatorError('size', img.size, (s,s))  
-            # Test 0,0 vs 9,0
-            box = (12,12,76,76)
-            sqr = img.crop(box)
-            ok = self.validationInfo.do_test_square(sqr, 0, 9, result)
-            if not ok:
-                raise ValidatorError('color', 1, self.validationInfo.colorInfo[9][9], result)
-            box = (912,912,976,976)
-            sqr = img.crop(box)
-            ok = self.validationInfo.do_test_square(sqr, 9, 0, result)
-            if not ok:
-                raise ValidatorError('color', 1, self.validationInfo.colorInfo[0][0], result)
+    @staticmethod
+    def run(server: TargetServer) -> list[ValidationSuccess | ValidationFailure]:
+        results = []
+        expected_img = get_expected_image()
+        # 0 degree rotation is implicitly tested elsewhere
+        rotations = [90, 180, 270]
+        for rot in rotations:
+            request = ImageAPIRequest.of(rotation=str(rot))
+            try:
+                rotated_img = get_image(server, request)
+                if rot == 180:
+                    expected_rotated_img = expected_img.rot180()
+                elif rot == 90:
+                    expected_rotated_img = expected_img.rot90()
+                else:
+                    expected_rotated_img = expected_img.rot270()
 
-            params = {'rotation': '270'}
-            img = result.get_image(params)
-            s = 1000
-            if not img.size[0] in [s-1, s, s+1]:
-                raise ValidatorError('size', img.size, (s,s))  
-            # Test 0,0 vs 9,0
-            box = (12,12,76,76)
-            sqr = img.crop(box)
-            ok = self.validationInfo.do_test_square(sqr, 9, 0, result)
-            if not ok:
-                raise ValidatorError('color', 1, self.validationInfo.colorInfo[9][9], result)
-            box = (912,912,976,976)
-            sqr = img.crop(box)
-            ok = self.validationInfo.do_test_square(sqr, 0, 9, result)
-            if not ok:
-                raise ValidatorError('color', 1, self.validationInfo.colorInfo[0][0], result)
-
-            return result 
-
-        except:
-            self.validationInfo.check('status', result.last_status, 200, result)
-            raise
+                if compare_images(rotated_img, expected_rotated_img):
+                    results.append(
+                        ValidationSuccess(
+                            details=f"Rotation by {rot} degrees was successful."
+                        )
+                    )
+                else:
+                    url = request.url(server)
+                    results.append(
+                        ValidationFailure(
+                            url=url,
+                            expected="A correctly rotated image.",
+                            received="An incorrectly rotated image.",
+                            details=f"Image rotated by {rot} degrees does not match the expected image.",
+                        )
+                    )
+            except Exception as e:
+                url = request.url(server)
+                results.append(
+                    ValidationFailure(
+                        url=url,
+                        expected="A valid image.",
+                        received=f"An error: {e}",
+                        details=f"Request for rotation {rot} failed.",
+                    )
+                )
+        return results

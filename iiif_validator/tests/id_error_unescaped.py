@@ -1,19 +1,33 @@
-from .test import BaseTest, ValidatorError
+from .test import (
+    ValidationTest,
+    ComplianceLevel,
+    TestCategory,
+    IIIFVersion,
+    TargetServer,
+    ValidationFailure,
+    ValidationSuccess,
+    make_request,
+)
 
-class Test_Id_Error_Unescaped(BaseTest):
-    label = 'Unescaped identifier gives 400'
-    level = 1
-    category = 1
-    versions = [u'1.0', u'1.1', u'2.0', u'3.0']
-    validationInfo = None
 
-    def run(self, result):
-        try:
-            url = result.make_url({'identifier': '[frob]'})
-            url = url.replace('%5B', '[')
-            url = url.replace('%5D', ']')
-            error = result.fetch(url)
-            self.validationInfo.check('status', result.last_status, [400, 404], result)
-            return result   
-        except Exception as error:
-            raise ValidatorError('url-check', str(error), 400, result, 'Failed to get random identifier from url: {}.'.format(url))
+class ErrorUnescapedIdentifier(ValidationTest):
+    name = "Unescaped Identifier gives 404"
+    compliance_level = ComplianceLevel.LEVEL_1
+    category = TestCategory.INFO
+    versions = [IIIFVersion.V2, IIIFVersion.V3]
+
+    @staticmethod
+    def run(server: TargetServer) -> ValidationFailure | ValidationSuccess:
+        url = f"{server.base_url}/%5Bfrob%5D/info.json"
+        resp = make_request(url)
+        if resp.status in (404, 400):
+            return ValidationSuccess(
+                details="Returned 404 or 400 for random identifier"
+            )
+        else:
+            return ValidationFailure(
+                url=url,
+                expected="HTTP Status 404 or 400",
+                received=f"HTTP Status {resp.status}",
+                details="Got unexpected status code for unescaped identifier",
+            )

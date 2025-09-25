@@ -1,18 +1,34 @@
-from .test import BaseTest
+from .test import (
+    ValidationTest,
+    ComplianceLevel,
+    TestCategory,
+    IIIFVersion,
+    TargetServer,
+    ValidationFailure,
+    ValidationSuccess,
+    ImageAPIRequest,
+    get_image_format,
+)
 
-class Test_Format_Tif(BaseTest):
-    label = 'TIFF format'
-    level = 3
-    category = 6
-    versions = [u'1.0', u'1.1', u'2.0', u'3.0']
-    validationInfo = None
 
-    def run(self, result):
-        try:
-            params = {'format': 'tif'}
-            img = result.get_image(params)
-            self.validationInfo.check('quality', img.format, 'TIFF', result)
-            return result
-        except:
-            self.validationInfo.check('status', result.last_status, 200, result,'Failed to retrieve tiff.')
-            raise
+class FormatTIF(ValidationTest):
+    name = "TIFF format"
+    compliance_level = ComplianceLevel.OPTIONAL
+    category = TestCategory.FORMAT
+    versions = [IIIFVersion.V2, IIIFVersion.V3]
+    extra_name = "tif"
+
+    @staticmethod
+    def run(server: TargetServer) -> ValidationFailure | ValidationSuccess:
+        req = ImageAPIRequest.of(format="tif")
+        fmt = get_image_format(server, req)
+        if fmt == "tiff":
+            return ValidationSuccess(details="Server returned a TIFF image")
+        else:
+            url = req.url(server)
+            return ValidationFailure(
+                url=url,
+                expected="TIFF image",
+                received=f"{fmt or '<none>'} image",
+                details="Server did not return a TIFF image",
+            )

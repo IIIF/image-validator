@@ -1,17 +1,35 @@
-from .test import BaseTest, ValidatorError
+import random
 
-class Test_Quality_Error_Random(BaseTest):
-    label = 'Random quality gives 400'
-    level = 1
-    category = 5
-    versions = [u'1.0', u'1.1', u'2.0', u'3.0']
-    validationInfo = None
+from .test import (
+    ValidationTest,
+    ComplianceLevel,
+    TestCategory,
+    IIIFVersion,
+    TargetServer,
+    ValidationFailure,
+    ValidationSuccess,
+    ImageAPIRequest,
+    make_random_string,
+    make_request,
+)
 
-    def run(self, result):
-        try:
-            url = result.make_url({'quality': self.validationInfo.make_randomstring(6)})
-            error = result.fetch(url)
-            self.validationInfo.check('status', result.last_status, 400, result)
-            return result 
-        except Exception as error:
-            raise ValidatorError('url-check', str(error), 400, result, 'Failed to get random quality from url: {}.'.format(url))
+
+class ErrorOnRandomQuality(ValidationTest):
+    name = "Random quality gives 400"
+    compliance_level = ComplianceLevel.LEVEL_1
+    category = TestCategory.QUALITY
+    versions = [IIIFVersion.V2, IIIFVersion.V3]
+
+    @staticmethod
+    def run(server: TargetServer) -> ValidationFailure | ValidationSuccess:
+        random.seed(31337)  # Ensure reproducibility
+        url = ImageAPIRequest.of(quality=make_random_string(6)).url(server)
+        resp = make_request(url)
+        if resp.status != 400:
+            return ValidationFailure(
+                url=url,
+                expected="400 Bad Request",
+                received=f"{resp.status} {resp.body.decode('utf8')}",
+                details=f"Server did not return 400 for random quality",
+            )
+        return ValidationSuccess(details="Server returned 400 for random quality")

@@ -1,21 +1,43 @@
-from .test import BaseTest, ValidatorError
 import random
 
-class Test_Region_Square(BaseTest):
-    label = 'Request a square region of the full image.'
-    level = level = {u'3.0': 1, u'2.1': 3, u'2.1.1': 1}
-    category = 3
-    versions = [u'3.0', u'2.1', u'2.1.1'] 
-    validationInfo = None
+from .test import (
+    ValidationTest,
+    ComplianceLevel,
+    TestCategory,
+    IIIFVersion,
+    TargetServer,
+    ValidationFailure,
+    ValidationSuccess,
+    ImageAPIRequest,
+    get_expected_image,
+    get_image,
+    compare_images,
+)
 
-    def run(self, result):
-        params = {'region': 'square'}
-        try:
-            img = result.get_image(params)
-        except:
-            pass
 
-        # should this be a warning as size extension called full could be allowed
-        self.validationInfo.check('square-region', result.last_status, 200, result, "A square region is manditory for levels 1 and 2 in IIIF version 3.0.")
-        self.validationInfo.check('square-region', img.size[0], img.size[1], result, "Square region returned a rectangle of unequal lenghts.")
-        return result
+class RegionSquare(ValidationTest):
+    name = "Request a square region of the full image."
+    compliance_level = {
+        IIIFVersion.V3: ComplianceLevel.LEVEL_1,
+        IIIFVersion.V2: ComplianceLevel.OPTIONAL,
+    }
+    category = TestCategory.REGION
+    versions = [IIIFVersion.V2, IIIFVersion.V3]
+    extra_name = "regionSquare"
+
+    @staticmethod
+    def run(server: TargetServer) -> ValidationFailure | ValidationSuccess:
+        random.seed(31337)  # for reproducibility
+        # Square region on full image should return the full validation image, since its width/height are equal
+        expected = get_expected_image()
+        req = ImageAPIRequest.of(region="square")
+        square = get_image(server, req)
+        if not compare_images(expected, square):
+            url = req.url(server)
+            return ValidationFailure(
+                url=url,
+                expected="Square region to match expected image",
+                received="Square region did not match expected image",
+                details="Server did not correctly handle region=square",
+            )
+        return ValidationSuccess(details="Server correctly handled region=square")

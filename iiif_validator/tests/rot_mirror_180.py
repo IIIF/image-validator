@@ -1,34 +1,64 @@
-from .test import BaseTest, ValidatorError
+from .test import (
+    ValidationTest,
+    ComplianceLevel,
+    TestCategory,
+    IIIFVersion,
+    TargetServer,
+    ValidationFailure,
+    ValidationSuccess,
+    ImageAPIRequest,
+    get_image,
+    get_expected_image,
+    compare_images,
+)
 
-class Test_Rot_Mirror_180(BaseTest):
-    label = 'Mirroring plus 180 rotation'
-    level = 3
-    category = 4
-    versions = [u'2.0', u'3.0']
-    validationInfo = None
 
-    def run(self, result):
+class RotationMirror180Test(ValidationTest):
+    name = "Mirroring plus 180 rotation"
+    compliance_level = ComplianceLevel.OPTIONAL
+    category = TestCategory.ROTATION
+    versions = [IIIFVersion.V2, IIIFVersion.V3]
+    extra_name = "mirroring"
+
+    @staticmethod
+    def run(server: TargetServer) -> ValidationSuccess | ValidationFailure:
+        request = ImageAPIRequest.of(rotation="!180")
         try:
-            params = {'rotation': '!180'}
-            img = result.get_image(params)
-            s = 1000
-            if not img.size[0] in [s-1, s, s+1]:
-                raise ValidatorError('size', img.size, (s,s))  
+            transformed_img = get_image(server, request)
+            expected_img = get_expected_image()
 
-            #0,0 vs 9,9
-            box = (12,12,76,76)
-            sqr = img.crop(box)
-            ok = self.validationInfo.do_test_square(sqr, 0, 9, result)
-            if not ok:
-                raise ValidatorError('mirror', 1, self.validationInfo.colorInfo[9][9], result)
+            if (
+                transformed_img.width != expected_img.width
+                or transformed_img.height != expected_img.height
+            ):
+                url = request.url(server)
+                return ValidationFailure(
+                    url=url,
+                    expected=f"Image dimensions to be ({expected_img.width}, {expected_img.height})",
+                    received=f"Image dimensions were ({transformed_img.width}, {transformed_img.height})",
+                    details="Incorrect image dimensions for mirrored 180 degree rotation.",
+                )
 
-            # 9,9 vs 0,0
-            box = (912,912,976,976)
-            sqr = img.crop(box)
-            ok = self.validationInfo.do_test_square(sqr, 9, 0, result)
-            if not ok:
-                raise ValidatorError('mirror', 1, self.validationInfo.colorInfo[0][0], result)             
-            return result             
-        except:
-            self.validationInfo.check('status', result.last_status, 200, result)
-            raise
+            # !180 is a vertical flip
+            expected_transformed_img = expected_img.flip("vertical")
+
+            if compare_images(transformed_img, expected_transformed_img):
+                return ValidationSuccess(
+                    details="Mirroring plus 180 degree rotation was successful."
+                )
+            else:
+                url = request.url(server)
+                return ValidationFailure(
+                    url=url,
+                    expected="A correctly transformed image (mirrored and rotated 180 degrees).",
+                    received="An incorrectly transformed image.",
+                    details="Image does not match the expected transformation.",
+                )
+        except Exception as e:
+            url = request.url(server)
+            return ValidationFailure(
+                url=url,
+                expected="A valid image.",
+                received=f"An error: {e}",
+                details="Request for mirrored 180 degree rotation failed.",
+            )
