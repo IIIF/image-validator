@@ -25,7 +25,7 @@ class Test_Format_Webp(BaseTest):
             raise ValidatorError('format', 'http response code: {}'.format(error.code), url, result, 'Failed to retrieve webp, got response code {}'.format(error.code))
         img = wh.read()
         wh.close()
-        if img[8:12] != "WEBP":
+        if img[8:12] != b'WEBP':
             raise ValidatorError('format', 'unknown', 'WEBP', result)
         else:
             result.tests.append('format')
