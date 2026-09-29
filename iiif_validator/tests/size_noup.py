@@ -11,7 +11,7 @@ class Test_No_Size_Up(BaseTest):
     def run(self, result):
         s = random.randint(1100,2000)
 
-        # testing vesrion 2.x and 1.x to make sure they aren't upscaled
+        # testing version 2.x and 1.x to make sure they aren't upscaled
         self.checkSize(result, '%s,%s' % (s,s))
         self.checkSize(result, ',%s' % (s))
         self.checkSize(result, '%s,' % (s))
