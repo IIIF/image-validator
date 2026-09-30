@@ -2,7 +2,9 @@ from .test import BaseTest
 
 class Test_Quality_Bitonal(BaseTest):
     label = 'Bitonal quality'
-    level = 2
+    # bitonal is optional at every compliance level in 3.0, so treat it like
+    # other optional features (level 3) rather than requiring it for level 2
+    level = {u'3.0': 3, u'2.0': 2, u'1.0': 2, u'1.1': 2}
     category = 5
     versions = [u'1.0', u'1.1', u'2.0', u'3.0']
     validationInfo = None
