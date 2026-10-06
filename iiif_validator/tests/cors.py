@@ -1,4 +1,4 @@
-from .test import BaseTest
+from .test import BaseTest, ValidatorError
 
 class Test_Cors(BaseTest):
     label = 'Cross Origin Headers'
@@ -14,5 +14,6 @@ class Test_Cors(BaseTest):
             if k.lower() == 'access-control-allow-origin':
                 cors = v
                 break
-        self.validationInfo.check('CORS', cors, '*', result, 'Failed to get correct CORS header.')
+        if cors != '*' and cors != result.get_request_origin():
+            raise ValidatorError('cors', cors, '*', result, 'Failed to match Access-Control-Allow-Origin response header')
         return result
