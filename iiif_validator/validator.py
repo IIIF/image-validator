@@ -485,7 +485,7 @@ class Validator(object):
         self.app = Bottle()
         self.dispatch_views()
         self.app.hook('after_request')(self.after_request)
-        self.app.error_handler = self.get_error_handler()
+        self.app.error_handler.update(self.get_error_handler())
         return self.app
 
 

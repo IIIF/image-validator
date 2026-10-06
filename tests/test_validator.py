@@ -35,6 +35,8 @@ class TestAll(unittest.TestCase):
         """Validator class initialization."""
         v = Validator(False)
         self.assertTrue(hasattr(v, 'handle_test'))
+        app = v.get_bottle_app()
+        self.assertIn(404, app.error_handler)
 
     def test05_cors(self):
         """Test suite CORS."""

@@ -9,7 +9,7 @@ else:
     VERSION = "0.0.0.dev0"    
 
 REQUIREMENTS = [
-    "bottle>=0.12.1",
+    "bottle>=0.13.4,<0.14",
     "python-magic>=0.4.12",
     "lxml>=3.7.0",
     "Pillow>=6.2.2"
